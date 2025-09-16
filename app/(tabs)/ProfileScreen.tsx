@@ -1,11 +1,14 @@
-import Text from '@/components/common/Text';
+import Button from '@/components/common/Button';
+import { useAuth } from '@/hooks/useAuth';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 
 export default function ProfileScreen() {
+    const { logout } = useAuth();
+
     return (
         <View style={styles.container}>
-            <Text type="h1" textAlign="center" text="Perfil" />
+            <Button text='Logout' onPress={logout} />
         </View>
     );
 }

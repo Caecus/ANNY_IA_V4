@@ -5,7 +5,13 @@ export default {
         name: "ANNY_IA_V4",
         slug: "ANNY_IA_V4",
         version: "1.0.0",
+        android: {
+            package: "com.caecus.anny_ia_v4",
+        },
         extra: {
+            eas: {
+                projectId: "156e6c14-54e2-4deb-86fe-c96552cc6471"
+            },
             APP_API_URL: process.env.APP_API_URL,
             APP_API_URL_PORT: process.env.APP_API_URL_PORT,
             APP_API_URL_TWO: process.env.APP_API_URL_TWO,

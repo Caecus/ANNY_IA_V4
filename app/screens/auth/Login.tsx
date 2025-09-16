@@ -21,7 +21,8 @@ const LoginScreen = () => {
         try {
             const payload = { email, password };
             const result = await login(payload);
-            if (result && (result.token || result.accessToken)) {
+
+            if (result?.access_token && result?.user) {
                 router.replace('/(tabs)');
             } else {
                 Alert.alert('Error', result?.message || 'Credenciales incorrectas');
