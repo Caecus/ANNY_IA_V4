@@ -6,13 +6,46 @@
   "build": {
     "development": {
       "developmentClient": true,
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "APP_API_URL": "http://3.15.63.191:7003",
+        "APP_API_URL_PORT": "http://3.15.63.191:7003/api",
+        "APP_API_URL_TWO": "http://3.15.63.191/apitwo",
+        "APP_API_URL_GLASSES": "http://3.15.63.191:7006",
+        "APP_API_URL_INTERSECTIONS": "http://3.15.63.191:7008",
+        "GOOGLE_MAP_KEY": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk",
+        "ONESIGNAL_APP_ID": "5dcbdd4d-f28b-4a3a-98ff-37f6629038d8",
+        "KAIROS_API_KEY": "a9f8262bb43e8b71d47d30e5f8248902",
+        "GPS_HIGH_ACCURACY": "disabled"
+      }
     },
     "preview": {
-      "distribution": "internal"
+      "distribution": "internal",
+      "env": {
+        "APP_API_URL": "http://3.15.63.191:7003",
+        "APP_API_URL_PORT": "http://3.15.63.191:7003/api",
+        "APP_API_URL_TWO": "http://3.15.63.191/apitwo",
+        "APP_API_URL_GLASSES": "http://3.15.63.191:7006",
+        "APP_API_URL_INTERSECTIONS": "http://3.15.63.191:7008",
+        "GOOGLE_MAP_KEY": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk",
+        "ONESIGNAL_APP_ID": "5dcbdd4d-f28b-4a3a-98ff-37f6629038d8",
+        "KAIROS_API_KEY": "a9f8262bb43e8b71d47d30e5f8248902",
+        "GPS_HIGH_ACCURACY": "disabled"
+      }
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "env": {
+        "APP_API_URL": "http://3.15.63.191:7003",
+        "APP_API_URL_PORT": "http://3.15.63.191:7003/api",
+        "APP_API_URL_TWO": "http://3.15.63.191/apitwo",
+        "APP_API_URL_GLASSES": "http://3.15.63.191:7006",
+        "APP_API_URL_INTERSECTIONS": "http://3.15.63.191:7008",
+        "GOOGLE_MAP_KEY": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk",
+        "ONESIGNAL_APP_ID": "5dcbdd4d-f28b-4a3a-98ff-37f6629038d8",
+        "KAIROS_API_KEY": "a9f8262bb43e8b71d47d30e5f8248902",
+        "GPS_HIGH_ACCURACY": "disabled"
+      }
     }
   },
   "submit": {
