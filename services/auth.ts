@@ -15,9 +15,10 @@ export default {
                 () => console.log('login firebase'),
                 () => console.log('error login firebase'),
             );
-            console.log('entrando 2', Constants.expoConfig?.extra?.APP_API_URL_PORT)
+            const urlFinal = `${Constants.expoConfig?.extra?.APP_API_URL_PORT}/auth/signin`;
+            console.log('URL FINAL LOGIN:', urlFinal);
             const data = await axios.post(
-                `${Constants.expoConfig?.extra?.APP_API_URL_PORT}/auth/signin`,
+                urlFinal,
                 payload,
             );
             return data.data;

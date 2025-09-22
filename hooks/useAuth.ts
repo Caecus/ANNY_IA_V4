@@ -1,11 +1,16 @@
+
 import authService from '@/services/auth';
-import { setIsAuthenticated, setToken, setUser, storeLogout } from '@/store/authSlice';
+import { setIsAuthenticated, setToken, setUser, storeLogout, User } from '@/store/authSlice';
 import { RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
 
 export function useAuth() {
     const dispatch = useDispatch();
-    const { user, token, isAuthenticated } = useSelector((state: RootState) => state.auth);
+    const { user, token, isAuthenticated } = useSelector((state: RootState) => state.auth) as {
+      user: User | null;
+      token: string | null;
+      isAuthenticated: boolean;
+    };
 
     const login = async (payload: any) => {
         const result = await authService.login(payload);
