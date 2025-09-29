@@ -1,8 +1,8 @@
+import { getEnvVar } from '@/utils/env';
 import axios from 'axios';
-import Config from 'react-native-config';
 import firebaseSdk from './firebaseSdk';
 
-const apiUrl = `${Config.APP_API_URL}/api`;
+const apiUrl = `${getEnvVar('APP_API_URL')}/api`;
 
 export default {
     async login(payload: any) {
@@ -14,7 +14,7 @@ export default {
                 () => console.log('error login firebase'),
             );
             const { data } = await axios.post(
-                `${Config.APP_API_URL_PORT}/auth/signin`,
+                `${getEnvVar('APP_API_URL_PORT')}/auth/signin`,
                 payload,
             );
             return data;

@@ -49,7 +49,10 @@ const Button: React.FC<ButtonProps> = ({
 
     const textStyle: { type: 'buttonSmall' | 'button'; color: string } = {
         type: size === 'sm' ? 'buttonSmall' : 'button',
-        color: type === 'secondary' && !disabled ? colors.buttonSecondaryText : colors.buttonPrimaryText,
+        color: type === 'secondary' && !disabled 
+            ? colors.buttonSecondaryText 
+            :
+            type === 'outlined' ? colors.primary : colors.buttonPrimaryText,
     };
 
     const getType = (): ViewStyle => {

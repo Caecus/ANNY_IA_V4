@@ -1,8 +1,9 @@
+
+import { getEnvVar } from '@/utils/env';
 import axios from 'axios';
-import Constants from 'expo-constants';
 import firebaseSdk from './firebaseSdk';
 
-const apiUrl = `${Constants.expoConfig?.extra?.APP_API_URL}/api`;
+const apiUrl = `${getEnvVar('APP_API_URL')}/api`;
 
 export default {
     async login(payload: any) {
@@ -15,7 +16,7 @@ export default {
                 () => console.log('login firebase'),
                 () => console.log('error login firebase'),
             );
-            const urlFinal = `${Constants.expoConfig?.extra?.APP_API_URL_PORT}/auth/signin`;
+            const urlFinal = `${getEnvVar('APP_API_URL_PORT')}/auth/signin`;
             console.log('URL FINAL LOGIN:', urlFinal);
             const data = await axios.post(
                 urlFinal,
@@ -23,6 +24,7 @@ export default {
             );
             return data.data;
         } catch (error) {
+            //@ts-ignore
             console.log('error login', error.message);
         }
     },

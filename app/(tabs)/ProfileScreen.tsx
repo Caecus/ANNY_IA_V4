@@ -1,13 +1,17 @@
+
 import colors from '@/assets/colors';
 import Button from '@/components/common/Button';
 import Text from '@/components/common/Text';
 import { useAuth } from '@/hooks/useAuth';
 import { getInitials, humanizeDate } from '@/utils/profile';
+import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
     const { logout, user } = useAuth();
+    const router = useRouter();
     if (!user) return null;
 
     const initials = getInitials(user.name, user.lastName);
@@ -40,8 +44,33 @@ export default function ProfileScreen() {
                     </View>
                 </View>
             </View>
+
+            {/* Links a otras pantallas */}
+            <View style={styles.linksContainer}>
+                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/conectividad')}>
+                    <MaterialIcons name="bluetooth" size={22} color={colors.primary} style={styles.linkIcon} />
+                    <Text text="Conexión a dispositivos" type="p2" color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/comandos')}>
+                    <Ionicons name="mic" size={22} color={colors.primary} style={styles.linkIcon} />
+                    <Text text="Comandos (Micrófono)" type="p2" color={colors.primary} />
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/legal')}>
+                    <FontAwesome5 name="file-contract" size={20} color={colors.primary} style={styles.linkIcon} />
+                    <Text text="Términos y condiciones" type="p2" color={colors.primary} />
+                </TouchableOpacity>
+            </View>
+
             <View style={styles.buttonContainer}>
-                <Button text="Cerrar sesión" onPress={logout} style={styles.logoutBtn} />
+                <View style={styles.buttonSubcontainer}>
+                    <Button 
+                        text="Cerrar sesión" 
+                        onPress={logout} 
+                        style={styles.logoutBtn} 
+                        type='outlined'
+                    />
+                    <MaterialIcons name="logout" size={24} color={colors.primary} style={{ position: 'absolute', right: 16, top: '50%', transform: [{ translateY: -12 }] }} />
+                </View>
             </View>
         </View>
     );
@@ -50,24 +79,22 @@ export default function ProfileScreen() {
 const AVATAR_SIZE = 96;
 const styles = StyleSheet.create({
     container: {
-        // flex: 1,
-        height: '90%',
+        flex: 1,
         width: '100%',
         alignItems: 'center',
-        justifyContent: 'space-around',
+        justifyContent: 'space-between',
         backgroundColor: colors.background,
         paddingTop: 48,
+        paddingBottom: 100,
     },
     headerContainer: {
         width: '100%',
-        height: '30%',
+        flex: 1.2,
         rowGap: 15,
         justifyContent: 'center',
         alignItems: 'center',
     },
-    avatarContainer: {
-        
-    },
+    avatarContainer: {},
     avatar: {
         width: AVATAR_SIZE,
         height: AVATAR_SIZE,
@@ -82,8 +109,6 @@ const styles = StyleSheet.create({
         elevation: 4,
     },
     name: {
-        // marginTop: 8,
-        // marginBottom: 2,
         textAlign: 'center',
     },
     email: {
@@ -101,21 +126,45 @@ const styles = StyleSheet.create({
         minWidth: 110,
     },
     infoContainer: {
-        height: '50%',
+        flex: 2,
         width: '100%',
-        paddingHorizontal: '15%'
+        paddingHorizontal: '15%',
     },
     infoRows: {
         width: '100%',
         justifyContent: 'center',
-        paddingTop: 40
+        paddingTop: 40,
+    },
+    linksContainer: {
+        width: '100%',
+        paddingHorizontal: '10%',
+        marginTop: 10,
+        marginBottom: 0,
+        gap: 12,
+        flex: 1,
+        justifyContent: 'center',
+    },
+    link: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        backgroundColor: colors.backgroundAlt,
+        borderRadius: 16,
+        marginBottom: 2,
+    },
+    linkIcon: {
+        marginRight: 12,
+    },
+    buttonSubcontainer: {
+        width: '50%',
     },
     buttonContainer: {
-        height: '20%',
-        width: '50%'
+        width: '100%',
+        alignItems: 'flex-start',
+        marginTop: 16,
     },
     logoutBtn: {
-        marginTop: 32,
         width: 200,
     },
 });

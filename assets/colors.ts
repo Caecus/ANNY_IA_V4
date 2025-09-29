@@ -23,6 +23,7 @@ const colors = {
     textSecondary: '#6d3a6d',
     textDisabled: '#b8a1b8',
     textOnPrimary: '#ffffff',
+    human: '#5E5E5E',
 
     // Botones
     buttonPrimaryBg: '#4a0149',

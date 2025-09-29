@@ -3,6 +3,7 @@ import { configureStore } from '@reduxjs/toolkit';
 import { combineReducers } from 'redux';
 import { persistReducer, persistStore } from 'redux-persist';
 import authReducer from './authSlice';
+import devicesReducer from './devicesSlice';
 
 const persistConfig = {
   key: 'root',
@@ -11,6 +12,7 @@ const persistConfig = {
 
 const rootReducer = combineReducers({
   auth: authReducer,
+  devices: devicesReducer
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

@@ -1,3 +1,6 @@
+import { AccessibilityProvider } from '@/context/AccessibilityContext';
+import { CompassProvider } from '@/context/CompassContext';
+import { GlassesProvider } from '@/context/GlassesContext';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { RootState, store } from '@/store/store';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
@@ -17,7 +20,11 @@ function AuthGate({ children }: { children: React.ReactNode }) {
         const currentRoute = segments.join('/');
         if (!isAuthenticated && !currentRoute.includes('screens/auth')) {
             router.replace('/screens/auth/Login');
-        } else if (isAuthenticated && !currentRoute.includes('(tabs)')) {
+        } else if (
+            isAuthenticated &&
+            !currentRoute.includes('(tabs)') &&
+            segments[0] !== '(stack)'
+        ) {
             router.replace('/(tabs)');
         }
     }, [isAuthenticated, segments]);
@@ -37,16 +44,23 @@ export default function RootLayout() {
 
     return (
         <Provider store={store}>
-            <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-                <AuthGate>
-                    <Stack>
-                        <Stack.Screen name="screens/auth/Login" options={{ headerShown: false }} />
-                        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                        <Stack.Screen name="+not-found" />
-                    </Stack>
-                </AuthGate>
-                <StatusBar style="auto" />
-            </ThemeProvider>
+            <AccessibilityProvider>
+                <GlassesProvider>
+                    <CompassProvider>
+                        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+                            <AuthGate>
+                                <Stack>
+                                    <Stack.Screen name="screens/auth/Login" options={{ headerShown: false }} />
+                                    <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+                                    <Stack.Screen name='(stack)' options={{ headerShown: false }} />
+                                    <Stack.Screen name="+not-found" />
+                                </Stack>
+                            </AuthGate>
+                            <StatusBar style="auto" />
+                        </ThemeProvider>
+                    </CompassProvider>
+                </GlassesProvider>
+            </AccessibilityProvider>
         </Provider>
     );
 }
