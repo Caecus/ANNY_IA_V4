@@ -1,5 +1,4 @@
 // services/wifiService.js
-import { getEnvVar } from '@/utils/env';
 import { PermissionsAndroid, Platform } from 'react-native';
 import {
     ConnectGlassesPayload,
@@ -14,6 +13,7 @@ import {
     StopRangingResponse,
     StopStreamResponse
 } from '../types/glassesWifi';
+import { getEnvVar } from '../utils/env';
 import glasses from './glasses';
 
 interface GlassesPerformReadParams {

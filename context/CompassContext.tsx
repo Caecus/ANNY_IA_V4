@@ -1,7 +1,7 @@
-import { RouteSelectedStep } from '@/containers/maps/mapScreen/models';
-import { Coords } from '@/containers/maps/models';
 import * as Location from 'expo-location';
 import React, { createContext, useEffect, useState } from 'react';
+import { RouteSelectedStep } from '../containers/maps/mapScreen/models';
+import { Coords } from '../containers/maps/models';
 
 export interface CompassContextProps {
     getCurrentHeading: () => number | null;

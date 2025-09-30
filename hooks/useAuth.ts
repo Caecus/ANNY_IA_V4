@@ -1,8 +1,8 @@
 
-import authService from '@/services/auth';
-import { setIsAuthenticated, setToken, setUser, storeLogout, User } from '@/store/authSlice';
-import { RootState } from '@/store/store';
 import { useDispatch, useSelector } from 'react-redux';
+import authService from '../services/auth';
+import { setIsAuthenticated, setToken, setUser, storeLogout, User } from '../store/authSlice';
+import { RootState } from '../store/store';
 
 export function useAuth() {
     const dispatch = useDispatch();

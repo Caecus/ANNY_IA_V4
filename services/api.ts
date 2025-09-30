@@ -1,5 +1,5 @@
-import { getEnvVar } from '@/utils/env';
 import axios from 'axios';
+import { getEnvVar } from '../utils/env';
 import firebaseSdk from './firebaseSdk';
 
 const apiUrl = `${getEnvVar('APP_API_URL')}/api`;

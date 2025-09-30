@@ -87,9 +87,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace 'com.caecus.anny_ia_v4'
+    namespace 'com.caecus.anny_v4'
     defaultConfig {
-        applicationId 'com.caecus.anny_ia_v4'
+        applicationId 'com.caecus.anny_v4'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

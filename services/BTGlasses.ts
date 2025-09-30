@@ -1,6 +1,6 @@
-import { getEnvVar } from '@/utils/env';
 import { PermissionsAndroid, Platform } from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
+import { getEnvVar } from '../utils/env';
 
 // import Tts from 'react-native-tts';
 

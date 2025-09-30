@@ -1,8 +1,8 @@
-import colors from '@/assets/colors';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import colors from '../../assets/colors';
 
 export default function CustomTabBarBackground() {
     return (

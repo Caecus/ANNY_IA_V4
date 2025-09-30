@@ -11,15 +11,22 @@ function warnIfMissing(key, fallback) {
 
 export default {
     expo: {
-        name: "ANNY_IA_V4",
-        slug: "ANNY_IA_V4",
+        name: "anny-v4",
+        slug: "anny-v4",
         version: "1.0.0",
         android: {
-            package: "com.caecus.anny_ia_v4",
+            package: "com.caecus.anny_v4",
+            permissions: [
+                "BLUETOOTH",
+                "BLUETOOTH_ADMIN",
+                "BLUETOOTH_CONNECT",
+                "BLUETOOTH_SCAN",
+                "ACCESS_FINE_LOCATION"
+            ]
         },
         extra: {
             eas: {
-                projectId: "156e6c14-54e2-4deb-86fe-c96552cc6471"
+                projectId: "6a77aceb-b3cb-49df-9f02-3674ca7ad1a8"
             },
             APP_API_URL: warnIfMissing('APP_API_URL', 'http://3.15.63.191:7003'),
             APP_API_URL_PORT: warnIfMissing('APP_API_URL_PORT', 'http://3.15.63.191:7003/api'),

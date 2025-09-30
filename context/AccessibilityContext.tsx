@@ -1,6 +1,6 @@
-import { dispatch, navigate } from '@/services/Navigation';
-import reporting from '@/services/reporting';
-import { getEnvVar } from '@/utils/env';
+import { dispatch, navigate } from '../services/Navigation';
+import reporting from '../services/reporting';
+import { getEnvVar } from '../utils/env';
 // import Voice from '@react-native-community/voice';
 import { CommonActions } from '@react-navigation/native';
 import axios from 'axios';

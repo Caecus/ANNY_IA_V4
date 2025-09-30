@@ -1,11 +1,11 @@
-import colors from '@/assets/colors';
-import { ThemedText } from '@/components/ThemedText';
-import { GlassesContext } from '@/context/GlassesContext';
-import { logEvent } from '@/services/log';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useContext } from 'react';
 import { StyleSheet, View } from 'react-native';
+import colors from '../../assets/colors';
+import { ThemedText } from '../../components/ThemedText';
+import { GlassesContext } from '../../context/GlassesContext';
+import { logEvent } from '../../services/log';
 
 export default function ComandosScreen() {
     const router = useRouter();

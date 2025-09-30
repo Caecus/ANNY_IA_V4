@@ -31,7 +31,7 @@ extensions.configure(com.facebook.react.ReactSettingsExtension) { ex ->
 }
 expoAutolinking.useExpoModules()
 
-rootProject.name = 'ANNY_IA_V4'
+rootProject.name = 'anny-v4'
 
 expoAutolinking.useExpoVersionCatalog()
 

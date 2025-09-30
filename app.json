@@ -1,7 +1,8 @@
 {
   "expo": {
+    "owner": "ndqa96",
     "name": "anny-app",
-    "slug": "anny-app",
+    "slug": "anny-v4",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",

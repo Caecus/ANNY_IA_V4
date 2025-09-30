@@ -1,7 +1,7 @@
-import colors from '@/assets/colors';
 import { Ionicons } from '@expo/vector-icons';
 import React from 'react';
 import { ActivityIndicator, TouchableOpacity, View, ViewStyle } from 'react-native';
+import colors from '../../assets/colors';
 import Text from './Text';
 
 interface ButtonProps {

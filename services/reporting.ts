@@ -1,6 +1,6 @@
-import { ReportPayload } from '@/types/report';
-import { getEnvVar } from '@/utils/env';
 import axios from 'axios';
+import { ReportPayload } from '../types/report';
+import { getEnvVar } from '../utils/env';
 
 const apiUrl = `${getEnvVar('APP_API_URL_TWO')}`;
 

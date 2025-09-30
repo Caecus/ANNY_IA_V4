@@ -1,16 +1,16 @@
-import BTGlasses from '@/services/BTGlasses';
-import WIFIGlasses from '@/services/WIFIGlasses';
-import { Device } from '@/store/devicesSlice';
-import { GlassesProtocolEnum } from '@/types/glasses-protocol.enum';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { createContext, useContext, useRef, useState } from 'react';
 import { NativeModules, ToastAndroid } from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
+import BTGlasses from '../services/BTGlasses';
+import WIFIGlasses from '../services/WIFIGlasses';
+import { Device } from '../store/devicesSlice';
+import { GlassesProtocolEnum } from '../types/glasses-protocol.enum';
 // import Tts from 'react-native-tts';
 // import dgram from 'react-native-udp';
 // import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
-import { getEnvVar } from '@/utils/env';
+import { getEnvVar } from '../utils/env';
 import { AccessibilityContext, VoiceCommand } from './AccessibilityContext';
 
 const { AudioManagerModule } = NativeModules;

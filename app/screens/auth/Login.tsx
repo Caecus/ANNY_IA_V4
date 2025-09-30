@@ -1,13 +1,13 @@
 
 
-import colors from '@/assets/colors';
-import Button from '@/components/common/Button';
-import Text from '@/components/common/Text';
-import { useAuth } from '@/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, KeyboardAvoidingView, Platform, StyleSheet, TextInput, View } from 'react-native';
+import colors from '../../../assets/colors';
+import Button from '../../../components/common/Button';
+import Text from '../../../components/common/Text';
+import { useAuth } from '../../../hooks/useAuth';
 
 const LoginScreen = () => {
     const [email, setEmail] = useState('');
@@ -46,7 +46,7 @@ const LoginScreen = () => {
                 end={{ x: 1, y: 1 }}
             >
                 <View style={styles.cardGlass}>
-                    <Image source={require('@/assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
+                    <Image source={require('../../../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
                     <Text type="h1" textAlign="center" style={styles.title} text="Iniciar sesión" />
                     <Text type="h3" textAlign="center" style={styles.subtitle} text="¡Bienvenido de nuevo!" />
                     <TextInput

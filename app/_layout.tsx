@@ -1,8 +1,3 @@
-import { AccessibilityProvider } from '@/context/AccessibilityContext';
-import { CompassProvider } from '@/context/CompassContext';
-import { GlassesProvider } from '@/context/GlassesContext';
-import { useColorScheme } from '@/hooks/useColorScheme';
-import { RootState, store } from '@/store/store';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
@@ -10,6 +5,11 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import 'react-native-reanimated';
 import { Provider, useSelector } from 'react-redux';
+import { AccessibilityProvider } from '../context/AccessibilityContext';
+import { CompassProvider } from '../context/CompassContext';
+import { GlassesProvider } from '../context/GlassesContext';
+import { useColorScheme } from '../hooks/useColorScheme';
+import { RootState, store } from '../store/store';
 
 function AuthGate({ children }: { children: React.ReactNode }) {
     const router = useRouter();

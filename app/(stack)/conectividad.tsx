@@ -1,13 +1,13 @@
-import colors from '@/assets/colors';
-import DevicesConectionCard from '@/components/devices/DevicesConectionCard';
-import { ThemedText } from '@/components/ThemedText';
-import { GlassesContext } from '@/context/GlassesContext';
-import { logEvent } from '@/services/log';
-import { connectDevice, Device, disconnectDevice } from '@/store/devicesSlice';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useContext, useEffect, useState } from 'react';
 import { Alert, FlatList, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import colors from '../../assets/colors';
+import DevicesConectionCard from '../../components/devices/DevicesConectionCard';
+import { ThemedText } from '../../components/ThemedText';
+import { GlassesContext } from '../../context/GlassesContext';
+import { logEvent } from '../../services/log';
+import { connectDevice, Device, disconnectDevice } from '../../store/devicesSlice';
 // import WifiManager from "react-native-wifi-reborn";
 import { useDispatch, useSelector } from 'react-redux';
 

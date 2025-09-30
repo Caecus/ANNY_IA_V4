@@ -1,10 +1,10 @@
-import colors from '@/assets/colors';
-import { ThemedText } from '@/components/ThemedText';
-import { logEvent } from '@/services/log';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
+import colors from '../../assets/colors';
+import { ThemedText } from '../../components/ThemedText';
+import { logEvent } from '../../services/log';
 
 export default function LegalScreen() {
     const router = useRouter();

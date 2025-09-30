@@ -1,33 +1,33 @@
 
-import colors from '@/assets/colors';
-import CustomTabBarBackground from '@/components/ui/CustomTabBarBackground';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React from 'react';
 import { Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import colors from '../../assets/colors';
+import CustomTabBarBackground from '../../components/ui/CustomTabBarBackground';
 
 function MicTabButton({
-    children,
-    onPress,
-    accessibilityState = {},
+  children,
+  onPress,
+  accessibilityState = {},
 }: {
-    children: React.ReactNode;
-    onPress: () => void;
-    accessibilityState?: { selected?: boolean };
+  children: React.ReactNode;
+  onPress?: (e?: any) => void;
+  accessibilityState?: { selected?: boolean };
 }) {
-    const focused = accessibilityState?.selected ?? false;
-    return (
-        <TouchableOpacity
-            onPress={onPress}
-            activeOpacity={0.85}
-            style={[
-                styles.micButton,
-                focused && styles.micButtonActive,
-            ]}
-        >
-            {children}
-        </TouchableOpacity>
-    );
+  const focused = accessibilityState?.selected ?? false;
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      activeOpacity={0.85}
+      style={[
+        styles.micButton,
+        focused && styles.micButtonActive,
+      ]}
+    >
+      {children}
+    </TouchableOpacity>
+  );
 }
 
 export default function TabLayout() {
@@ -75,7 +75,10 @@ export default function TabLayout() {
         options={{
           title: 'Microfono',
           tabBarButton: (props) => (
-            <MicTabButton {...props}>
+            <MicTabButton
+              {...props}
+              onPress={props.onPress}
+            >
               <MaterialIcons name="mic" size={36} color={colors.white} />
             </MicTabButton>
           ),

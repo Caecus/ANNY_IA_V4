@@ -1,7 +1,7 @@
-import colors from '@/assets/colors';
 import React from 'react';
 import { Text as RNText, TextStyle } from 'react-native';
 import { heightPercentageToDP } from 'react-native-responsive-screen';
+import colors from '../../assets/colors';
 
 interface TextProps {
     text?: string;

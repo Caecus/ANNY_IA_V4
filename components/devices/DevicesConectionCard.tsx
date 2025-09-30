@@ -1,7 +1,7 @@
-import colors from "@/assets/colors";
-import { Device } from "@/store/devicesSlice";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import colors from "../../assets/colors";
+import { Device } from "../../store/devicesSlice";
 
 export default function DevicesConectionCard ({ item, handleDevicePress }: { item: Device; handleDevicePress: (device: any) => Promise<void> }) {
     return <TouchableOpacity onPress={() => handleDevicePress(item)} activeOpacity={0.85}>

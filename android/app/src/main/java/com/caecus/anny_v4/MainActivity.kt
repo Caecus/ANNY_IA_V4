@@ -1,4 +1,4 @@
-package com.caecus.anny_ia_v4
+package com.caecus.anny_v4
 import expo.modules.splashscreen.SplashScreenManager
 
 import android.os.Build
