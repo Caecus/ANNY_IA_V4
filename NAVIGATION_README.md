@@ -34,10 +34,10 @@ Sistema completo de navegación diseñado específicamente para personas con dis
 
 ### 1. **Dependencias Requeridas**
 ```bash
-npm install expo-location expo-speech expo-keep-awake
+npx expo install react-native-maps expo-location expo-speech expo-keep-awake
 ```
 
-**Nota**: No necesitas `react-native-maps` ya que el sistema funciona completamente por voz sin interfaz de mapa visual, optimizado para personas con discapacidad visual.
+**Nota**: Ahora incluye `react-native-maps` para mostrar el mapa visual en el tab "Explore", manteniendo todas las funciones de accesibilidad.
 
 ### 2. **Variables de Entorno**
 Copia `.env.example` a `.env` y configura:
@@ -59,29 +59,39 @@ Ya incluidos en `AndroidManifest.xml`:
 
 ## 📱 Como Usar la App
 
-### **Para Usuarios con Discapacidad Visual:**
+### **Interfaz de Usuario:**
+
+#### 📱 **Tab "Explore" - Mapa Interactivo**
+- **Mapa visual** con ubicación actual y destinos
+- **Botones flotantes** en la parte superior derecha:
+  - 📍 Mi ubicación (centrar mapa)
+  - 🔍 Búsqueda (mostrar panel de búsqueda)
+  - 🧭 Navegación (mostrar controles)
+
+#### **Para Usuarios con Discapacidad Visual:**
 
 #### 1. **🌍 Obtener Ubicación**
-- Toca "Obtener ubicación" 
-- La app pedirá permisos de GPS
+- Toca el botón flotante "Mi ubicación" (📍)
+- O usa el panel de controles → "Obtener ubicación"
 - Escucharás "Ubicación actual obtenida"
 
 #### 2. **🔍 Buscar Destino**
-- Usa el campo de búsqueda
-- Escribe el nombre del lugar (ej: "farmacia", "banco santander")
-- La app mostrará sugerencias
-- Toca sobre la opción deseada
+- Toca el botón flotante de búsqueda (🔍)
+- Se abrirá el panel de búsqueda
+- Escribe el nombre del lugar
+- Selecciona de las sugerencias
+- El destino aparecerá en el mapa
 
 #### 3. **🧭 Iniciar Navegación**
+- Toca el botón flotante de navegación (🧭)
+- Se abrirá el panel de controles
 - Toca "Iniciar Navegación"
-- Escucharás la distancia total y tiempo estimado
-- Comenzarán las instrucciones de voz paso a paso
+- Verás la ruta en el mapa Y escucharás instrucciones
 
 #### 4. **👂 Durante la Navegación**
-- Escucha las instrucciones automáticas
-- Toca "Repetir Instrucción" si necesitas oír de nuevo
-- La app anunciará intersecciones cuando estés cerca
-- Toca "Detener Navegación" para cancelar
+- **Mapa**: Muestra tu progreso en tiempo real
+- **Voz**: Instrucciones automáticas paso a paso
+- **Paneles**: Acceso a repetir instrucciones y controles
 
 ### **Controles de Accesibilidad:**
 - **Doble toque**: Activar botones
@@ -156,7 +166,7 @@ Si tienes una app anterior en React Native, estos componentes reemplazan:
 - ❌ `@react-native-community/geolocation` → ✅ `expo-location`
 - ❌ `react-native-tts` → ✅ `expo-speech`
 - ❌ `react-native-permissions` → ✅ `expo-location.requestPermissions`
-- ❌ `react-native-maps` → ✅ **No necesario** (navegación 100% por voz)
+- ✅ `react-native-maps` → ✅ **Integrado en tab Explore** (mapa visual + navegación por voz)
 - ✅ APIs de Google Maps (sin cambios)
 
 ## 📝 Próximas Características

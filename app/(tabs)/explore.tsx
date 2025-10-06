@@ -1,20 +1,6 @@
-import { StyleSheet, View } from 'react-native';
+import React from 'react';
+import MapExplore from '../../components/navigation/MapExplore';
 
-import Text from '../../components/common/Text';
-
-export default function TabTwoScreen() {
-  return (
-    <View style={styles.container}>
-        <Text type="h1" textAlign="center" text="Explore" />
-    </View>
-  );
+export default function ExploreScreen() {
+  return <MapExplore />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        backgroundColor: '#f5f5fa',
-    },
-});

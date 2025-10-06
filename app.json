@@ -10,7 +10,10 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "config": {
+        "googleMapsApiKey": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,7 +28,12 @@
         "BLUETOOTH_CONNECT",
         "BLUETOOTH_ADVERTISE",
         "ACCESS_FINE_LOCATION"
-      ]
+      ],
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk"
+        }
+      }
     },
     "web": {
       "bundler": "metro",
@@ -47,6 +55,12 @@
           "imageWidth": 200,
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
+        }
+      ],
+      [
+        "react-native-maps",
+        {
+          "googleMapsApiKey": "AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk"
         }
       ]
     ],
