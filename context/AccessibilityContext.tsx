@@ -263,10 +263,29 @@ export const AccessibilityProvider = ({ children }: any) => {
     {
       name: "navegar hacia",
       roles: ["all"],
-      description: "Va a la pantalla de Mapa e inicia el trayecto indicado",
+      description: "Va a la pantalla de Navegación e inicia el trayecto indicado",
       action: (voiceCommand: any) => {
         const destination = voiceCommand.toLowerCase().split('navegar hacia ')[1]
-        navigate('TravelPlanning', { destino: destination, triggerSearch: true });
+        // Navegar a la pestaña Explore con el nuevo sistema
+        navigate('(tabs)', { screen: 'explore', params: { voiceDestination: destination } });
+      },
+    },
+    {
+      name: "ir hacia",
+      roles: ["all"],
+      description: "Comando alternativo para iniciar navegación",
+      action: (voiceCommand: any) => {
+        const destination = voiceCommand.toLowerCase().split('ir hacia ')[1]
+        navigate('(tabs)', { screen: 'explore', params: { voiceDestination: destination } });
+      },
+    },
+    {
+      name: "necesito ir hacia",
+      roles: ["all"],
+      description: "Comando natural para iniciar navegación",
+      action: (voiceCommand: any) => {
+        const destination = voiceCommand.toLowerCase().split('necesito ir hacia ')[1]
+        navigate('(tabs)', { screen: 'explore', params: { voiceDestination: destination } });
       },
     },
 		{

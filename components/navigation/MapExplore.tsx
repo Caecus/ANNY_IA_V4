@@ -1,4 +1,5 @@
 import { MaterialIcons } from '@expo/vector-icons';
+import { RouteProp, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
 import React, { useEffect, useRef, useState } from 'react';
 import {
@@ -10,6 +11,10 @@ import {
     View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+type RouteParams = {
+  voiceDestination?: string;
+};
 // Importación condicional de MapView para evitar errores
 let MapView: any = null;
 let Marker: any = null;
@@ -44,9 +49,10 @@ const { width, height } = Dimensions.get('window');
 interface MapExploreProps {}
 
 export default function MapExplore({}: MapExploreProps) {
-  const { state } = useNavigation();
+  const { state, searchPlaces } = useNavigation();
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
+  const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
   
   const mapRef = useRef<any>(null);
   const [mapRegion, setMapRegion] = useState({
@@ -58,6 +64,17 @@ export default function MapExplore({}: MapExploreProps) {
   
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
+
+  // Manejar navegación iniciada por comando de voz
+  useEffect(() => {
+    const voiceDestination = route.params?.voiceDestination;
+    if (voiceDestination) {
+      console.log('🎤 Procesando comando de voz:', voiceDestination);
+      setIsSearchVisible(true);
+      // Buscar automáticamente el destino mencionado por voz
+      searchPlaces(voiceDestination);
+    }
+  }, [route.params?.voiceDestination, searchPlaces]);
 
   // Actualizar región del mapa cuando cambie la ubicación
   useEffect(() => {

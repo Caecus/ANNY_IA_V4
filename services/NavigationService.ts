@@ -51,6 +51,11 @@ class NavigationService {
     this.googleMapsApiKey = process.env.EXPO_PUBLIC_GOOGLE_MAP_KEY || '';
     this.backendApiUrl = process.env.EXPO_PUBLIC_APP_API_URL || '';
     this.intersectionsApiUrl = process.env.EXPO_PUBLIC_APP_API_URL_INTERSECTIONS || '';
+    
+    console.log('🚀 NavigationService inicializado');
+    console.log('🔑 Google Maps API Key:', this.googleMapsApiKey ? '***configurado***' : 'NO CONFIGURADO');
+    console.log('🌐 Backend API:', this.backendApiUrl || 'NO CONFIGURADO');
+    console.log('🔗 Intersections API:', this.intersectionsApiUrl || 'NO CONFIGURADO');
   }
 
   /**
@@ -93,20 +98,32 @@ class NavigationService {
     if (query.length < 2) return [];
 
     try {
-      // Usar tu backend como proxy si está configurado
-      if (this.backendApiUrl) {
-        const response = await axios.get(`${this.backendApiUrl}/destination/placesautocomplete/${query}`);
-        return response.data;
+      console.log('🔍 Buscando lugares:', query);
+      console.log('🔑 API Key disponible:', !!this.googleMapsApiKey);
+      
+      // Llamada directa a Google Places API para Argentina
+      const url = `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${this.googleMapsApiKey}&language=es`;
+      console.log('🌐 URL de búsqueda:', url.replace(this.googleMapsApiKey, 'API_KEY_HIDDEN'));
+      
+      const response = await axios.get(url);
+      
+      console.log('✅ Respuesta de Google Places:', response.data.status);
+      
+      if (response.data.status === 'OK') {
+        return response.data.predictions || [];
       } else {
-        // Llamada directa a Google Places API
-        const response = await axios.get(
-          `https://maps.googleapis.com/maps/api/place/autocomplete/json?input=${encodeURIComponent(query)}&key=${this.googleMapsApiKey}&language=es`
-        );
-        return response.data.predictions;
+        console.error('❌ Error de Google Places API:', response.data.status, response.data.error_message);
+        this.speak(`Error de búsqueda: No hay resultados`);
+        return [];
       }
     } catch (error) {
       console.error('Error buscando lugares:', error);
-      this.speak('Error buscando lugares');
+      if (axios.isAxiosError(error)) {
+        console.error('Detalles del error:', error.response?.data);
+        this.speak(`Error de conexión: ${error.response?.status || 'Sin conexión'}`);
+      } else {
+        this.speak('Error buscando lugares');
+      }
       return [];
     }
   }
