@@ -37,6 +37,9 @@ export default {
             ONESIGNAL_APP_ID: warnIfMissing('ONESIGNAL_APP_ID', '5dcbdd4d-f28b-4a3a-98ff-37f6629038d8'),
             KAIROS_API_KEY: warnIfMissing('KAIROS_API_KEY', 'a9f8262bb43e8b71d47d30e5f8248902'),
             GPS_HIGH_ACCURACY: warnIfMissing('GPS_HIGH_ACCURACY', 'false'),
-        }
+        },
+          plugins: [
+            "expo-speech-recognition"
+        ]
     }
 };

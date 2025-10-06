@@ -1,3 +1,4 @@
+import colors from '@/assets/colors';
 import React from 'react';
 import {
     AccessibilityInfo,
@@ -5,7 +6,6 @@ import {
     StyleSheet,
     TouchableOpacity
 } from 'react-native';
-import { Colors } from '../../constants/Colors';
 import { useNavigation } from '../../context/NavigationContext';
 import { useColorScheme } from '../../hooks/useColorScheme';
 import { ThemedText } from '../ThemedText';
@@ -14,7 +14,6 @@ import { ThemedView } from '../ThemedView';
 export function NavigationControls() {
   const { state, startNavigation, stopNavigation, repeatInstruction, getCurrentLocation } = useNavigation();
   const colorScheme = useColorScheme();
-  const colors = Colors[colorScheme ?? 'light'];
 
   const handleGetLocation = async () => {
     try {
@@ -83,7 +82,7 @@ export function NavigationControls() {
           style={[
             styles.button,
             styles.locationButton,
-            { backgroundColor: state.currentLocation ? colors.tint : colors.tabIconDefault }
+            { backgroundColor: state.currentLocation ? colors.secondary : colors.primary}
           ]}
           onPress={handleGetLocation}
           disabled={state.isLoading}
@@ -93,7 +92,7 @@ export function NavigationControls() {
           accessibilityHint="Toca dos veces para obtener o actualizar tu ubicación actual"
         >
           <ThemedText style={[styles.buttonText, { color: 'white' }]}>
-            {state.currentLocation ? '📍 Ubicación obtenida' : '📍 Obtener ubicación'}
+            {state.currentLocation ? '📍 ' : '📍 Obtener ubicación'}
           </ThemedText>
         </TouchableOpacity>
         
@@ -115,7 +114,7 @@ export function NavigationControls() {
               styles.button,
               styles.primaryButton,
               { 
-                backgroundColor: (state.currentLocation && state.selectedDestination) ? colors.tint : colors.tabIconDefault,
+                backgroundColor: (state.currentLocation && state.selectedDestination) ? colors.secondary : colors.primary,
                 opacity: (state.currentLocation && state.selectedDestination) ? 1 : 0.6
               }
             ]}
@@ -146,7 +145,7 @@ export function NavigationControls() {
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={[styles.button, styles.repeatButton, { backgroundColor: colors.tint }]}
+              style={[styles.button, styles.repeatButton, { backgroundColor: colors.primary }]}
               onPress={handleRepeatInstruction}
               accessible={true}
               accessibilityRole="button"
@@ -166,7 +165,7 @@ export function NavigationControls() {
         <ThemedView style={styles.section}>
           <ThemedText style={styles.sectionTitle}>Paso Actual</ThemedText>
           <ThemedView 
-            style={[styles.stepInfo, { backgroundColor: colors.tint + '10' }]}
+            style={[styles.stepInfo, { backgroundColor: colors.secondary + '10' }]}
             accessible={true}
             accessibilityLabel={`Paso ${state.currentStepIndex + 1} de ${state.totalSteps}`}
           >
@@ -208,6 +207,9 @@ export function NavigationControls() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+    borderTopLeftRadius: 15,
+    borderTopRightRadius: 15,
+    paddingBottom: 200
   },
   section: {
     marginBottom: 24,
@@ -245,7 +247,7 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   stopButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: colors.secondary,
   },
   repeatButton: {
     // Color se maneja dinámicamente

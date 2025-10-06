@@ -160,7 +160,13 @@ class NavigationService {
       );
 
       if (response.data.routes && response.data.routes.length > 0) {
-        this.currentRoute = response.data.routes[0];
+        const routeData = response.data.routes[0];
+        // Google Directions API: steps están en legs[0].steps
+        const steps = routeData.legs && routeData.legs[0] && routeData.legs[0].steps ? routeData.legs[0].steps : [];
+        this.currentRoute = {
+          ...routeData,
+          steps,
+        };
         this.currentStepIndex = 0;
         return this.currentRoute;
       } else {

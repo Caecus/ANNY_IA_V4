@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
+import * as Speech from 'expo-speech';
 import React, { useEffect, useRef, useState } from 'react';
 import {
     ActivityIndicator,
@@ -55,12 +56,46 @@ export default function MapExplore({}: MapExploreProps) {
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
   
   const mapRef = useRef<any>(null);
-  const [mapRegion, setMapRegion] = useState({
-    latitude: -33.4489, // Santiago, Chile por defecto
-    longitude: -70.6693,
-    latitudeDelta: 0.01,
-    longitudeDelta: 0.01,
-  });
+  // Usar ubicación actual si está disponible, sino fallback a Córdoba, Argentina
+  const cordobaCoords = { latitude: -31.4167, longitude: -64.1833 };
+  const initialRegion = state.currentLocation
+    ? {
+        latitude: state.currentLocation.latitude,
+        longitude: state.currentLocation.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      }
+    : {
+        latitude: cordobaCoords.latitude,
+        longitude: cordobaCoords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      };
+  const [mapRegion, setMapRegion] = useState(initialRegion);
+  // TTS amigable
+  const speak = (text: string) => {
+    Speech.speak(text, { language: 'es-ES', rate: 0.9 });
+  };
+  // Verificar permisos de localización precisa al entrar
+  useEffect(() => {
+    const checkLocationPermission = async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permiso de ubicación', 'Se necesita permiso de ubicación precisa para mostrar tu posición en el mapa.');
+        speak('Por favor, permite el acceso a tu ubicación para usar el mapa y la navegación.');
+        // Usar Córdoba como fallback
+        setMapRegion({
+          latitude: cordobaCoords.latitude,
+          longitude: cordobaCoords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+      } else {
+        speak('Permiso de ubicación concedido. Mostrando tu posición en el mapa.');
+      }
+    };
+    checkLocationPermission();
+  }, []);
   
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
@@ -140,25 +175,58 @@ export default function MapExplore({}: MapExploreProps) {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Permisos', 'Se necesitan permisos de ubicación para usar esta función');
+        speak('Por favor, permite el acceso a tu ubicación para centrar el mapa.');
+        // Fallback a Córdoba
+        setMapRegion({
+          latitude: cordobaCoords.latitude,
+          longitude: cordobaCoords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({});
+      if (!location || !location.coords) {
+        Alert.alert('Error', 'No se pudo obtener la ubicación del dispositivo. Mostrando Córdoba, Argentina.');
+        speak('No se pudo obtener tu ubicación. Mostrando Córdoba, Argentina en el mapa.');
+        setMapRegion({
+          latitude: cordobaCoords.latitude,
+          longitude: cordobaCoords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        });
+        return;
+      }
       const newRegion = {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         latitudeDelta: 0.01,
         longitudeDelta: 0.01,
       };
-      
       setMapRegion(newRegion);
+      speak('Mapa centrado en tu ubicación actual.');
       if (mapRef.current) {
         mapRef.current.animateToRegion(newRegion, 1000);
       }
     } catch (error) {
-      Alert.alert('Error', 'No se pudo obtener la ubicación');
+      Alert.alert('Error', 'No se pudo obtener la ubicación del dispositivo. Mostrando Córdoba, Argentina.');
+      speak('No se pudo obtener tu ubicación. Mostrando Córdoba, Argentina en el mapa.');
+      setMapRegion({
+        latitude: cordobaCoords.latitude,
+        longitude: cordobaCoords.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
     }
   };
+
+    // TTS para loading amigable (hook debe ir fuera del render)
+  useEffect(() => {
+    if (state.isLoading) {
+      speak('Procesando búsqueda o navegación, por favor espera.');
+    }
+  }, [state.isLoading]);
 
   // Si MapView no está disponible, mostrar interfaz alternativa
   if (!isMapAvailable || !MapView) {
