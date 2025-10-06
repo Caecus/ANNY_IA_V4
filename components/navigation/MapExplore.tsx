@@ -11,15 +11,23 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 // Importación condicional de MapView para evitar errores
-let MapView: any, Marker: any, Polyline: any, PROVIDER_GOOGLE: any;
+let MapView: any = null;
+let Marker: any = null;
+let Polyline: any = null;
+let PROVIDER_GOOGLE: any = null;
+let isMapAvailable = false;
+
 try {
   const Maps = require('react-native-maps');
   MapView = Maps.default || Maps.MapView;
   Marker = Maps.Marker;
   Polyline = Maps.Polyline;
   PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
+  // Verificar que realmente esté disponible
+  isMapAvailable = !!(MapView && Marker && Polyline);
 } catch (error) {
   console.warn('react-native-maps no está disponible:', error);
+  isMapAvailable = false;
 }
 
 import colors from '../../assets/colors';
@@ -136,7 +144,7 @@ export default function MapExplore({}: MapExploreProps) {
   };
 
   // Si MapView no está disponible, mostrar interfaz alternativa
-  if (!MapView) {
+  if (!isMapAvailable || !MapView) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.fallbackContainer}>
