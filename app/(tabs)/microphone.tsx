@@ -40,20 +40,21 @@ export default function MicrophoneScreen() {
     }, [isListening]);
 
     const handleStartListening = async () => {
-        try {
-            setIsListening(true);
-            await voiceStart();
-            
-            // Simular tiempo de escucha (reemplazar con lógica real de Voice)
-            setTimeout(() => {
-                setIsListening(false);
-                // Aquí iría el procesamiento del comando de voz
-            }, 3000);
-        } catch (error) {
-            console.error('Error al iniciar reconocimiento de voz:', error);
-            Alert.alert('Error', 'No se pudo iniciar el reconocimiento de voz');
-            setIsListening(false);
-        }
+        // Por ahora, mostrar instrucciones al usuario sobre comandos disponibles
+        Alert.alert(
+            'Comandos de Voz Disponibles',
+            'Usa estos comandos:\n\n• "Navegar hacia [lugar]"\n• "Ir hacia [lugar]"\n• "Necesito ir hacia [lugar]"\n\nEjemplo: "Navegar hacia Hospital Italiano"',
+            [
+                {
+                    text: 'Entendido',
+                    onPress: () => {
+                        // Simular que está "escuchando"
+                        setIsListening(true);
+                        setTimeout(() => setIsListening(false), 2000);
+                    }
+                }
+            ]
+        );
     };
 
     const handleDirectNavigation = async (destination: string) => {
