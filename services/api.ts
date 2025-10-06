@@ -19,7 +19,7 @@ export default {
             );
             return data;
         } catch (error) {
-            console.log('error login', error);
+            console.log('[error login]: login method: ', error);
         }
     },
 

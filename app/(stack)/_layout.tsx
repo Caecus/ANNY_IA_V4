@@ -1,4 +1,15 @@
 import { Stack } from 'expo-router';
 export default function StackLayout() {
-  return <Stack screenOptions={{ headerShown: false }} />;
+  return (
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen 
+        name="navigation" 
+        options={{ 
+          title: 'Navegación Accesible',
+          headerShown: true,
+          headerBackTitle: 'Atrás'
+        }} 
+      />
+    </Stack>
+  );
 }

@@ -95,6 +95,16 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="navigation"
+        options={{
+          title: 'Navegación',
+          href: '/(stack)/navigation',
+          tabBarIcon: ({ color, focused }) => (
+            <MaterialIcons name="navigation" size={28} color={focused ? colors.primary : color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="ProfileScreen"
         options={{
           title: 'Perfil',

@@ -22,10 +22,11 @@ export default {
                 urlFinal,
                 payload,
             );
+            console.log(data, 'DATA RETORNADA DEL OBJETO');
             return data.data;
         } catch (error) {
             //@ts-ignore
-            console.log('error login', error.message);
+            console.log('[error login]: method from service', error);
         }
     },
 
