@@ -9,6 +9,7 @@ import {
     TouchableOpacity,
     View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 // Importación condicional de MapView para evitar errores
 let MapView: any, Marker: any, Polyline: any, PROVIDER_GOOGLE: any;
 try {
@@ -20,7 +21,6 @@ try {
 } catch (error) {
   console.warn('react-native-maps no está disponible:', error);
 }
-import { SafeAreaView } from 'react-native-safe-area-context';
 
 import colors from '../../assets/colors';
 import { ThemedText } from '../../components/ThemedText';
@@ -415,5 +415,39 @@ const styles = StyleSheet.create({
     marginTop: 16,
     fontSize: 16,
     color: 'white',
+  },
+  // Estilos para fallback cuando MapView no está disponible
+  fallbackContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 32,
+  },
+  fallbackTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  fallbackText: {
+    fontSize: 16,
+    marginTop: 12,
+    textAlign: 'center',
+    opacity: 0.7,
+    lineHeight: 24,
+  },
+  fallbackControlsPanel: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    maxHeight: height * 0.6,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
   },
 });
