@@ -33,6 +33,7 @@ export default {
             APP_API_URL_TWO: warnIfMissing('APP_API_URL_TWO', 'http://3.15.63.191/apitwo'),
             APP_API_URL_GLASSES: warnIfMissing('APP_API_URL_GLASSES', 'http://3.15.63.191:7006'),
             APP_API_URL_INTERSECTIONS: warnIfMissing('APP_API_URL_INTERSECTIONS', 'http://3.15.63.191:7008'),
+            APP_SOCKET_AI_URL: warnIfMissing('APP_SOCKET_AI_URL', 'http://localhost:4001'),
             GOOGLE_MAP_KEY: warnIfMissing('GOOGLE_MAP_KEY', 'AIzaSyA9z3Vopcf3z9BMYZKpwMCnGX8zCkmpcnk'),
             ONESIGNAL_APP_ID: warnIfMissing('ONESIGNAL_APP_ID', '5dcbdd4d-f28b-4a3a-98ff-37f6629038d8'),
             KAIROS_API_KEY: warnIfMissing('KAIROS_API_KEY', 'a9f8262bb43e8b71d47d30e5f8248902'),

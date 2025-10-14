@@ -8,16 +8,59 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { ThemedView } from '../../components/ThemedView';
 import { AccessibilityContext } from '../../context/AccessibilityContext';
+import { GlassesContext } from '../../context/GlassesContext';
 import { useNavigation } from '../../context/NavigationContext';
 import { useColorScheme } from '../../hooks/useColorScheme';
+import { getEnvVar } from '../../utils/env';
 
 export default function MicrophoneScreen() {
     const { voiceStart, voiceGetCommands } = useContext(AccessibilityContext);
     const { searchPlaces, selectDestination, state } = useNavigation();
+    const { 
+        getGlassesActive, 
+        glassesStartStreamingListener, 
+        glassesStopStreamingListener,
+        glassesStartRanging,
+        glassesStopRanging,
+        glassesDetectOnFrame,
+        glassesInit,
+        glassesWiFiConnected,
+        glassesScanText,
+        glassesRecognizeMoney,
+        glassesDescribeScene,
+        glassesReadDocument,
+        isSocketConnected,
+        glassesSocketConnect,
+        glassesStartStreamAnalysis,
+        glassesStopStreamAnalysis,
+        glassesAnalyzeCurrentFrame,
+        isStreamAnalysisActive
+    } = useContext(GlassesContext);
     const [isListening, setIsListening] = useState(false);
     const [recognizedText, setRecognizedText] = useState('');
     const [pulseAnim] = useState(new Animated.Value(1));
     const colorScheme = useColorScheme();
+
+    // Inicializar conexión de socket al cargar el componente
+    useEffect(() => {
+        const initSocketConnection = async () => {
+            if (!isSocketConnected()) {
+                try {
+                    const socketUrl = getEnvVar('APP_SOCKET_AI_URL') || 'http://localhost:4001';
+                    const connected = await glassesSocketConnect(socketUrl);
+                    if (connected) {
+                        console.log('[MicrophoneScreen] Socket AI conectado:', socketUrl);
+                    } else {
+                        console.warn('[MicrophoneScreen] No se pudo conectar al Socket AI');
+                    }
+                } catch (error) {
+                    console.error('[MicrophoneScreen] Error conectando Socket AI:', error);
+                }
+            }
+        };
+
+        initSocketConnection();
+    }, []);
 
     useEffect(() => {
         if (isListening) {
@@ -99,10 +142,12 @@ export default function MicrophoneScreen() {
         if (!event || !event.results || event.results.length === 0) return;
         const transcript = event.results[0].transcript;
         setRecognizedText(transcript);
-        // Si detecta comando válido, navega automáticamente
+        // Si detecta comando válido, procesa automáticamente
         if (transcript) {
             const lower = transcript.toLowerCase();
             let destino = '';
+            
+            // Comandos de navegación
             if (lower.includes('navegar hacia')) {
                 destino = lower.split('navegar hacia')[1]?.trim();
             } else if (lower.includes('ir hacia')) {
@@ -110,7 +155,45 @@ export default function MicrophoneScreen() {
             } else if (lower.includes('necesito ir hacia')) {
                 destino = lower.split('necesito ir hacia')[1]?.trim();
             }
-            if (destino) {
+            
+            // Comandos de anteojos CAECUS
+            if (lower.includes('iniciar detección') || lower.includes('empezar detección')) {
+                handleGlassesCommand('start_detection');
+                handleStopListening();
+            } else if (lower.includes('parar detección') || lower.includes('detener detección')) {
+                handleGlassesCommand('stop_detection');
+                handleStopListening();
+            } else if (lower.includes('activar sensores')) {
+                handleGlassesCommand('start_ranging');
+                handleStopListening();
+            } else if (lower.includes('desactivar sensores')) {
+                handleGlassesCommand('stop_ranging');
+                handleStopListening();
+            } else if (lower.includes('detectar objetos') || lower.includes('qué veo')) {
+                handleGlassesCommand('detect_objects');
+                handleStopListening();
+            } else if (lower.includes('escanear texto') || lower.includes('leer texto')) {
+                handleGlassesCommand('scan_text');
+                handleStopListening();
+            } else if (lower.includes('reconocer billete') || lower.includes('cuánto dinero')) {
+                handleGlassesCommand('recognize_money');
+                handleStopListening();
+            } else if (lower.includes('leer documento') || lower.includes('leer papel')) {
+                handleGlassesCommand('read_document');
+                handleStopListening();
+            } else if (lower.includes('describir escena') || lower.includes('qué hay aquí')) {
+                handleGlassesCommand('describe_scene');
+                handleStopListening();
+            } else if (lower.includes('activar análisis continuo') || lower.includes('análisis automático')) {
+                handleGlassesCommand('start_stream_analysis');
+                handleStopListening();
+            } else if (lower.includes('desactivar análisis') || lower.includes('parar análisis')) {
+                handleGlassesCommand('stop_stream_analysis');
+                handleStopListening();
+            } else if (lower.includes('analizar ahora') || lower.includes('qué veo ahora')) {
+                handleGlassesCommand('analyze_current_frame');
+                handleStopListening();
+            } else if (destino) {
                 handleDirectNavigation(destino);
                 handleStopListening();
             }
@@ -138,6 +221,180 @@ export default function MicrophoneScreen() {
         speakAlert(mensaje, friendly);
         setIsListening(false);
     });
+
+    const handleGlassesCommand = async (command: string) => {
+        try {
+            if (!getGlassesActive()) {
+                Alert.alert('Anteojos no conectados', 'Los anteojos CAECUS no están conectados. Conéctalos primero.');
+                speakAlert('Los anteojos CAECUS no están conectados. Conéctalos primero.');
+                return;
+            }
+
+            switch (command) {
+                case 'start_detection':
+                    if (!glassesWiFiConnected) {
+                        Alert.alert('WiFi requerido', 'Los anteojos necesitan estar conectados a WiFi para la detección.');
+                        speakAlert('Los anteojos necesitan estar conectados a WiFi para la detección.');
+                        return;
+                    }
+                    const started = await glassesStartStreamingListener();
+                    if (started) {
+                        Alert.alert('Detección iniciada', 'La detección de objetos está activa.');
+                        speakAlert('Detección de objetos iniciada correctamente.');
+                    } else {
+                        Alert.alert('Error', 'No se pudo iniciar la detección.');
+                        speakAlert('No se pudo iniciar la detección de objetos.');
+                    }
+                    break;
+
+                case 'stop_detection':
+                    await glassesStopStreamingListener();
+                    Alert.alert('Detección detenida', 'La detección de objetos se ha detenido.');
+                    speakAlert('Detección de objetos detenida.');
+                    break;
+
+                case 'start_ranging':
+                    await glassesStartRanging();
+                    Alert.alert('Sensores activados', 'Los sensores de distancia están activos.');
+                    speakAlert('Sensores de distancia activados.');
+                    break;
+
+                case 'stop_ranging':
+                    await glassesStopRanging();
+                    Alert.alert('Sensores desactivados', 'Los sensores de distancia se han desactivado.');
+                    speakAlert('Sensores de distancia desactivados.');
+                    break;
+
+                case 'detect_objects':
+                    speakAlert('Analizando lo que ves...');
+                    const detections = await glassesDetectOnFrame('yolov8n');
+                    if (detections && detections.length > 0) {
+                        const objectNames = detections.map((d: any) => d.class_name).join(', ');
+                        const msg = `Veo: ${objectNames}`;
+                        Alert.alert('Objetos detectados', msg);
+                        speakAlert(msg);
+                    } else {
+                        Alert.alert('Sin objetos', 'No se detectaron objetos en el campo de visión.');
+                        speakAlert('No se detectaron objetos en el campo de visión.');
+                    }
+                    break;
+
+                case 'scan_text':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    try {
+                        const text = await glassesScanText();
+                        Alert.alert('Texto escaneado', text);
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo escanear el texto');
+                    }
+                    break;
+
+                case 'recognize_money':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    try {
+                        const money = await glassesRecognizeMoney();
+                        Alert.alert('Billete reconocido', money);
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo reconocer el billete');
+                    }
+                    break;
+
+                case 'read_document':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    try {
+                        const document = await glassesReadDocument();
+                        Alert.alert('Documento leído', 'El documento se está leyendo por voz');
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo leer el documento');
+                    }
+                    break;
+
+                case 'describe_scene':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    try {
+                        const description = await glassesDescribeScene();
+                        Alert.alert('Descripción de la escena', description);
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo describir la escena');
+                    }
+                    break;
+
+                case 'start_stream_analysis':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    try {
+                        const started = await glassesStartStreamAnalysis('continuous');
+                        if (started) {
+                            Alert.alert('Análisis continuo', 'Análisis automático del streaming activado');
+                            speakAlert('Análisis automático del video activado');
+                        } else {
+                            Alert.alert('Error', 'No se pudo iniciar el análisis continuo');
+                            speakAlert('No se pudo iniciar el análisis automático');
+                        }
+                    } catch (error) {
+                        Alert.alert('Error', 'Error al iniciar análisis continuo');
+                        speakAlert('Error al iniciar análisis automático');
+                    }
+                    break;
+
+                case 'stop_stream_analysis':
+                    try {
+                        glassesStopStreamAnalysis();
+                        Alert.alert('Análisis detenido', 'Análisis automático del streaming desactivado');
+                        speakAlert('Análisis automático del video desactivado');
+                    } catch (error) {
+                        Alert.alert('Error', 'Error al detener análisis');
+                        speakAlert('Error al detener análisis automático');
+                    }
+                    break;
+
+                case 'analyze_current_frame':
+                    if (!isSocketConnected()) {
+                        Alert.alert('Socket no conectado', 'Necesitas conectar al servidor de análisis primero.');
+                        speakAlert('Necesitas conectar al servidor de análisis primero.');
+                        return;
+                    }
+                    if (!isStreamAnalysisActive()) {
+                        Alert.alert('Streaming no activo', 'Necesitas activar el streaming primero.');
+                        speakAlert('Necesitas activar el streaming primero.');
+                        return;
+                    }
+                    try {
+                        await glassesAnalyzeCurrentFrame('scene');
+                        speakAlert('Analizando la imagen actual');
+                    } catch (error) {
+                        Alert.alert('Error', 'No se pudo analizar la imagen actual');
+                        speakAlert('No se pudo analizar la imagen actual');
+                    }
+                    break;
+
+                default:
+                    speakAlert('Comando no reconocido.');
+            }
+        } catch (error) {
+            Alert.alert('Error', 'No se pudo ejecutar el comando de anteojos');
+            speakAlert('No se pudo ejecutar el comando de anteojos.');
+        }
+    };
 
     const handleDirectNavigation = async (destination: string) => {
         try {
@@ -218,9 +475,9 @@ export default function MicrophoneScreen() {
                     ) : null}
                 </ThemedView>
 
-                {/* Ejemplos de comandos de navegación */}
+                {/* Ejemplos de comandos */}
                 <ThemedView style={styles.examplesSection}>
-                    <ThemedText style={styles.examplesTitle}>Ejemplos de comandos:</ThemedText>
+                    <ThemedText style={styles.examplesTitle}>Comandos de Navegación:</ThemedText>
                     <ThemedView style={styles.exampleItem}>
                         <ThemedText style={styles.exampleCommand}>"Navegar hacia Hospital Italiano"</ThemedText>
                         <ThemedText style={styles.exampleDescription}>Busca y navega al destino</ThemedText>
@@ -229,15 +486,55 @@ export default function MicrophoneScreen() {
                         <ThemedText style={styles.exampleCommand}>"Ir hacia Obelisco"</ThemedText>
                         <ThemedText style={styles.exampleDescription}>Comando alternativo</ThemedText>
                     </ThemedView>
+                    
+                    <ThemedText style={[styles.examplesTitle, { marginTop: 24 }]}>Comandos de Anteojos CAECUS:</ThemedText>
                     <ThemedView style={styles.exampleItem}>
-                        <ThemedText style={styles.exampleCommand}>"Necesito ir hacia Plaza de Mayo"</ThemedText>
-                        <ThemedText style={styles.exampleDescription}>Comando natural</ThemedText>
+                        <ThemedText style={styles.exampleCommand}>"Iniciar detección"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Inicia el streaming y detección de objetos</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Parar detección"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Detiene el streaming</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Activar sensores"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Activa sensores de distancia</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Qué veo"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Analiza objetos en tiempo real</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Escanear texto"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Lee texto con los anteojos</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Reconocer billete"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Identifica denominación del billete</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Describir escena"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Describe todo lo que hay alrededor</ThemedText>
+                    </ThemedView>
+                    
+                    <ThemedText style={[styles.examplesTitle, { marginTop: 24 }]}>Comandos de Análisis en Tiempo Real:</ThemedText>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Activar análisis continuo"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Análisis automático del streaming</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Desactivar análisis"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Detiene análisis automático</ThemedText>
+                    </ThemedView>
+                    <ThemedView style={styles.exampleItem}>
+                        <ThemedText style={styles.exampleCommand}>"Analizar ahora"</ThemedText>
+                        <ThemedText style={styles.exampleDescription}>Analiza la imagen actual del streaming</ThemedText>
                     </ThemedView>
                 </ThemedView>
 
                 {/* Botones de prueba rápida */}
                 <ThemedView style={styles.quickTestSection}>
-                    <ThemedText style={styles.sectionTitle}>Prueba rápida:</ThemedText>
+                    <ThemedText style={styles.sectionTitle}>Prueba de Navegación:</ThemedText>
                     <TouchableOpacity
                         style={[styles.testButton, { backgroundColor: colors.primary }]}
                         onPress={() => handleDirectNavigation('Hospital')}
@@ -250,11 +547,41 @@ export default function MicrophoneScreen() {
                     >
                         <ThemedText style={styles.testButtonText}>💊 Buscar Farmacia</ThemedText>
                     </TouchableOpacity>
+                    
+                    <ThemedText style={[styles.sectionTitle, { marginTop: 20 }]}>Prueba de Anteojos:</ThemedText>
+                    <TouchableOpacity
+                        style={[styles.testButton, { backgroundColor: getGlassesActive() ? colors.secondary : '#999' }]}
+                        onPress={() => handleGlassesCommand('start_detection')}
+                        disabled={!getGlassesActive()}
+                    >
+                        <ThemedText style={styles.testButtonText}>👁️ Iniciar Detección</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.testButton, { backgroundColor: getGlassesActive() ? colors.secondary : '#999' }]}
+                        onPress={() => handleGlassesCommand('detect_objects')}
+                        disabled={!getGlassesActive()}
+                    >
+                        <ThemedText style={styles.testButtonText}>🔍 ¿Qué Veo?</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.testButton, { backgroundColor: getGlassesActive() && isSocketConnected() ? colors.secondary : '#999' }]}
+                        onPress={() => handleGlassesCommand('scan_text')}
+                        disabled={!getGlassesActive() || !isSocketConnected()}
+                    >
+                        <ThemedText style={styles.testButtonText}>📄 Escanear Texto</ThemedText>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[styles.testButton, { backgroundColor: getGlassesActive() && isSocketConnected() ? colors.secondary : '#999' }]}
+                        onPress={() => handleGlassesCommand('recognize_money')}
+                        disabled={!getGlassesActive() || !isSocketConnected()}
+                    >
+                        <ThemedText style={styles.testButtonText}>💵 Reconocer Billete</ThemedText>
+                    </TouchableOpacity>
                     <TouchableOpacity
                         style={[styles.testButton, { backgroundColor: colors.primary }]}
-                        onPress={() => handleDirectNavigation('Supermercado')}
+                        onPress={() => glassesInit()}
                     >
-                        <ThemedText style={styles.testButtonText}>🛒 Buscar Supermercado</ThemedText>
+                        <ThemedText style={styles.testButtonText}>🔗 Conectar Anteojos</ThemedText>
                     </TouchableOpacity>
                 </ThemedView>
             </ScrollView>
@@ -271,14 +598,12 @@ const styles = StyleSheet.create({
         color: '#2196F3',
     },
     container: {
-            // flex: 1,
         paddingBottom: 20,
         backgroundColor: '#f5f5fa',
     },
     content: {
-        flex: 1,
-        padding: 20,
-        paddingBottom: 200
+        // flex: 1,
+        // padding: 20,
     },
     header: {
         alignItems: 'center',
@@ -319,7 +644,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     examplesSection: {
-        // marginBottom: 32,
+        marginBottom: 32,
     },
     examplesTitle: {
         fontSize: 20,
@@ -341,8 +666,7 @@ const styles = StyleSheet.create({
         opacity: 0.7,
     },
     quickTestSection: {
-        marginTop: 'auto',
-        paddingBottom: 24, // Solo un pequeño padding para separar del navbar
+        paddingBottom: 24,
     },
     sectionTitle: {
         fontSize: 18,
