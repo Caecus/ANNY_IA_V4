@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import * as Speech from 'expo-speech';
 import { ExpoSpeechRecognitionModule, useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import React, { useContext, useEffect, useState } from 'react';
-import { Alert, Animated, PermissionsAndroid, Platform, StyleSheet, TouchableOpacity } from 'react-native';
+import { Alert, Animated, PermissionsAndroid, Platform, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { ThemedText } from '../../components/ThemedText';
 import { ThemedView } from '../../components/ThemedView';
@@ -13,7 +13,7 @@ import { useColorScheme } from '../../hooks/useColorScheme';
 
 export default function MicrophoneScreen() {
     const { voiceStart, voiceGetCommands } = useContext(AccessibilityContext);
-    const { searchPlaces, selectDestination } = useNavigation();
+    const { searchPlaces, selectDestination, state } = useNavigation();
     const [isListening, setIsListening] = useState(false);
     const [recognizedText, setRecognizedText] = useState('');
     const [pulseAnim] = useState(new Animated.Value(1));
@@ -143,10 +143,20 @@ export default function MicrophoneScreen() {
         try {
             // Buscar el destino
             await searchPlaces(destination);
-            // Note: En una implementación real, seleccionarías automáticamente el primer resultado
-            const navMsg = `Buscando destino: "${destination}". Ve a la pestaña Explore para ver los resultados.`;
-            Alert.alert('Navegación por Voz', navMsg);
-            speakAlert(navMsg, `Buscando el destino ${destination}. Cuando esté listo, te avisaremos en la pestaña explorar.`);
+            // Esperar brevemente para que el contexto se actualice
+            setTimeout(async () => {
+                if (state.searchResults && state.searchResults.length > 0) {
+                    // Seleccionar automáticamente el primer resultado
+                    await selectDestination(state.searchResults[0]);
+                    const navMsg = `Destino seleccionado automáticamente: "${state.searchResults[0].description}". Puedes iniciar la navegación en la pestaña Explore.`;
+                    Alert.alert('Navegación por Voz', navMsg);
+                    speakAlert(navMsg, `Destino ${state.searchResults[0].description} seleccionado. Puedes iniciar la navegación en la pestaña explorar.`);
+                } else {
+                    const navMsg = `No se encontraron resultados para "${destination}".`;
+                    Alert.alert('Navegación por Voz', navMsg);
+                    speakAlert(navMsg, navMsg);
+                }
+            }, 600);
         } catch (error) {
             Alert.alert('Error', 'No se pudo procesar el destino');
             speakAlert('No se pudo procesar el destino', 'No se pudo encontrar el destino que pediste. Intenta con otro lugar o revisa tu conexión.');
@@ -163,8 +173,11 @@ export default function MicrophoneScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.container}>
-            <ThemedView style={styles.content}>
+        <SafeAreaView style={[styles.container, { flex: 1 }]}> 
+            <ScrollView
+                contentContainerStyle={{ padding: 20, paddingBottom: 32 }}
+                showsVerticalScrollIndicator={false}
+            >
                 {/* Header */}
                 <ThemedView style={styles.header}>
                     <MaterialIcons name="mic" size={32} color={colors.primary} />
@@ -244,7 +257,7 @@ export default function MicrophoneScreen() {
                         <ThemedText style={styles.testButtonText}>🛒 Buscar Supermercado</ThemedText>
                     </TouchableOpacity>
                 </ThemedView>
-            </ThemedView>
+            </ScrollView>
         </SafeAreaView>
     );
 }
@@ -258,13 +271,14 @@ const styles = StyleSheet.create({
         color: '#2196F3',
     },
     container: {
-        flex: 1,
-        // Elimina el paddingBottom excesivo para evitar solapamiento
+            // flex: 1,
+        paddingBottom: 20,
         backgroundColor: '#f5f5fa',
     },
     content: {
         flex: 1,
         padding: 20,
+        paddingBottom: 200
     },
     header: {
         alignItems: 'center',

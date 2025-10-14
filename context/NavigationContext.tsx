@@ -3,6 +3,7 @@ import NavigationService, { NavigationRoute, NavigationStep, PlaceAutocomplete }
 
 export interface NavigationState {
   isNavigating: boolean;
+  travel_mode?: 'walking' | 'transit' | 'driving';
   currentRoute: NavigationRoute | null;
   currentStep: NavigationStep | null;
   currentStepIndex: number;
@@ -102,7 +103,7 @@ interface NavigationContextType {
   state: NavigationState;
   searchPlaces: (query: string) => Promise<void>;
   selectDestination: (place: PlaceAutocomplete) => Promise<void>;
-  startNavigation: () => Promise<void>;
+  startNavigation: (mode?: 'walking' | 'transit' | 'driving') => Promise<void>;
   stopNavigation: () => void;
   repeatInstruction: () => void;
   getCurrentLocation: () => Promise<void>;
@@ -170,14 +171,17 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'CLEAR_ERROR' });
 
     try {
+      console.log('[NAVCTX] Solicitando permisos de ubicación...');
       const hasPermissions = await NavigationService.requestLocationPermissions();
       if (!hasPermissions) {
         dispatch({ type: 'SET_ERROR', payload: 'Permisos de ubicación denegados' });
         return;
       }
 
+      console.log('[NAVCTX] Solicitando ubicación actual...');
       const location = await NavigationService.getCurrentLocation();
       if (location) {
+        console.log('[NAVCTX] Ubicación obtenida:', location);
         dispatch({ 
           type: 'SET_CURRENT_LOCATION', 
           payload: {
@@ -187,17 +191,21 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
         });
         NavigationService.speak('Ubicación actual obtenida');
       } else {
+        console.log('[NAVCTX] No se pudo obtener la ubicación');
         dispatch({ type: 'SET_ERROR', payload: 'No se pudo obtener la ubicación' });
       }
     } catch (error) {
       dispatch({ type: 'SET_ERROR', payload: 'Error obteniendo ubicación' });
-      console.error('Error obteniendo ubicación:', error);
+      console.error('[NAVCTX] Error obteniendo ubicación:', error);
     } finally {
-      dispatch({ type: 'SET_LOADING', payload: false });
+      // Aseguramos que el estado de carga se limpie siempre
+      setTimeout(() => {
+        dispatch({ type: 'SET_LOADING', payload: false });
+      }, 100);
     }
   }, []);
 
-  const startNavigation = useCallback(async () => {
+  const startNavigation = useCallback(async (mode: 'walking' | 'transit' | 'driving' = 'walking') => {
     if (!state.currentLocation) {
       dispatch({ type: 'SET_ERROR', payload: 'Primero debe obtener su ubicación actual' });
       return;
@@ -221,7 +229,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
           lat: state.selectedDestination.location.lat,
           lng: state.selectedDestination.location.lng,
         },
-        'walking'
+        mode
       );
 
       if (route) {

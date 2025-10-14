@@ -3,12 +3,25 @@ import * as Location from 'expo-location';
 import * as Speech from 'expo-speech';
 
 export interface NavigationStep {
+  travel_mode?: 'walking' | 'transit' | 'driving';
   html_instructions: string;
   distance: { text: string; value: number };
   duration: { text: string; value: number };
   start_location: { lat: number; lng: number };
   end_location: { lat: number; lng: number };
   maneuver?: string;
+  transit_details?: {
+    arrival_stop?: { name: string };
+    departure_stop?: { name: string };
+    arrival_time?: { text: string };
+    departure_time?: { text: string };
+    line?: {
+      short_name?: string;
+      name?: string;
+      agencies?: { name: string }[];
+    };
+    duration?: { text: string };
+  };
 }
 
 export interface NavigationRoute {
@@ -80,12 +93,39 @@ class NavigationService {
    */
   async getCurrentLocation(): Promise<Location.LocationObject | null> {
     try {
-      const location = await Location.getCurrentPositionAsync({
+      console.log('[NAV] Intentando obtener ubicación con precisión alta...');
+      const highAccuracyPromise = Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.High,
       });
-      return location;
+      const highTimeout = new Promise<null>((resolve) => setTimeout(() => {
+        console.log('[NAV] Timeout precisión alta (3s)');
+        resolve(null);
+      }, 3000));
+      let location = await Promise.race([highAccuracyPromise, highTimeout]);
+      if (location) {
+        console.log('[NAV] Ubicación obtenida con precisión alta:', location);
+        return location as Location.LocationObject;
+      }
+
+      console.log('[NAV] Intentando obtener ubicación con precisión baja...');
+      const lowAccuracyPromise = Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Low,
+      });
+      const lowTimeout = new Promise<null>((resolve) => setTimeout(() => {
+        console.log('[NAV] Timeout precisión baja (2s)');
+        resolve(null);
+      }, 2000));
+      location = await Promise.race([lowAccuracyPromise, lowTimeout]);
+      if (location) {
+        console.log('[NAV] Ubicación obtenida con precisión baja:', location);
+        return location as Location.LocationObject;
+      }
+
+      console.log('[NAV] No se pudo obtener la ubicación en ninguno de los intentos');
+      this.speak('No se pudo obtener la ubicación rápidamente. Intenta nuevamente.');
+      return null;
     } catch (error) {
-      console.error('Error obteniendo ubicación:', error);
+      console.error('[NAV] Error obteniendo ubicación:', error);
       this.speak('No se pudo obtener su ubicación actual');
       return null;
     }
@@ -225,6 +265,22 @@ class NavigationService {
   /**
    * Anunciar paso actual
    */
+  /**
+   * Calcular dirección cardinal entre dos puntos
+   */
+  private getCardinalDirection(lat1: number, lon1: number, lat2: number, lon2: number): string {
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+    const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+      Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+    let brng = Math.atan2(y, x) * 180 / Math.PI;
+    brng = (brng + 360) % 360;
+    if (brng >= 45 && brng < 135) return 'Este';
+    if (brng >= 135 && brng < 225) return 'Sur';
+    if (brng >= 225 && brng < 315) return 'Oeste';
+    return 'Norte';
+  }
+
   private announceCurrentStep(): void {
     if (!this.currentRoute || !this.isNavigating) return;
 
@@ -235,7 +291,18 @@ class NavigationService {
     const instruction = this.cleanHtmlInstructions(step.html_instructions);
     const distance = step.distance.text;
 
-    this.speak(`En ${distance}, ${instruction}`);
+    // Calcular dirección cardinal
+    let direction = '';
+    if (step.start_location && step.end_location) {
+      direction = this.getCardinalDirection(
+        step.start_location.lat,
+        step.start_location.lng,
+        step.end_location.lat,
+        step.end_location.lng
+      );
+    }
+
+    this.speak(`En ${distance}, ${instruction}. Camina hacia ${direction}`);
   }
 
   /**

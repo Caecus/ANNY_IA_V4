@@ -82,10 +82,11 @@ const styles = StyleSheet.create({
         flex: 1,
         width: '100%',
         alignItems: 'center',
-        justifyContent: 'space-between',
+        justifyContent: 'flex-start',
         backgroundColor: colors.background,
-        paddingTop: 48,
+        paddingTop: 32,
         paddingBottom: 100,
+        minHeight: '100%',
     },
     headerContainer: {
         width: '100%',
@@ -128,7 +129,9 @@ const styles = StyleSheet.create({
     infoContainer: {
         flex: 2,
         width: '100%',
-        paddingHorizontal: '15%',
+        paddingHorizontal: 24,
+        maxWidth: 500,
+        alignSelf: 'center',
     },
     infoRows: {
         width: '100%',
@@ -137,12 +140,14 @@ const styles = StyleSheet.create({
     },
     linksContainer: {
         width: '100%',
-        paddingHorizontal: '10%',
+        paddingHorizontal: 16,
         marginTop: 10,
         marginBottom: 0,
         gap: 12,
         flex: 1,
         justifyContent: 'center',
+        maxWidth: 500,
+        alignSelf: 'center',
     },
     link: {
         flexDirection: 'row',
@@ -157,14 +162,18 @@ const styles = StyleSheet.create({
         marginRight: 12,
     },
     buttonSubcontainer: {
-        width: '50%',
+        // alignSelf: 'center',
     },
     buttonContainer: {
         width: '100%',
+        // backgroundColor: '#F00',
         alignItems: 'flex-start',
-        marginTop: 16,
+        justifyContent: 'flex-start',
+        marginTop: 24,
     },
     logoutBtn: {
-        width: 200,
+        width: '100%',
+        minWidth: 180,
+        maxWidth: 320,
     },
 });
