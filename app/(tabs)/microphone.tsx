@@ -46,7 +46,7 @@ export default function MicrophoneScreen() {
         const initSocketConnection = async () => {
             if (!isSocketConnected()) {
                 try {
-                    const socketUrl = getEnvVar('APP_SOCKET_AI_URL') || 'http://localhost:4001';
+                    const socketUrl = getEnvVar('APP_SOCKET_AI_URL') || 'http://ai-vision-backend-env.eba-mjkziv3t.us-east-2.elasticbeanstalk.com';
                     const connected = await glassesSocketConnect(socketUrl);
                     if (connected) {
                         console.log('[MicrophoneScreen] Socket AI conectado:', socketUrl);

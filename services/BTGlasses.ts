@@ -1,6 +1,6 @@
 import { PermissionsAndroid, Platform } from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
-import { getEnvVar } from '../utils/env';
+import { getEnvVar, getGlassesConfig } from '../utils/env';
 
 // import Tts from 'react-native-tts';
 
@@ -37,12 +37,29 @@ export default {
     },
 
     isGlassesDevice(device: any) {
-        return device.name.startsWith('CAECUS');
+        console.log('[bt] checking if device is CAECUS:', device.name, 'starts with CAECUS:', device.name?.startsWith('CAECUS'));
+        return device.name && device.name.startsWith('CAECUS');
     },
 
     async btInitService({
         glassesResestState
     }: GlassesInitParams) {
+        const config = getGlassesConfig();
+        console.log('[bt] Configuration:', config);
+        
+        // En modo debug, simular conexión exitosa
+        if (config.isDebugMode && config.useSimulatedData) {
+            console.log('[bt] DEBUG MODE: Simulando conexión a anteojos CAECUS');
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Simular delay de conexión
+            return { 
+                success: true, 
+                isCaecus: true, 
+                glassesId: config.bluetoothConfig.simulatedDeviceId 
+            };
+        }
+
+        // Modo release: conexión real
+        console.log('[bt] RELEASE MODE: Conectando a anteojos reales');
         console.log('[bt] access');
     
         const bluetooth_available = await RNBluetoothClassic.isBluetoothAvailable();
@@ -65,7 +82,15 @@ export default {
         // Tts.speak('Bluetooth conectado');
     
         const list = await RNBluetoothClassic.getBondedDevices();
-        const listGlasses = list.filter((device) => this.isGlassesDevice(device));
+        console.log('[bt] bonded devices:', list);
+        console.log('[bt] filtering for CAECUS devices...');
+        
+        const listGlasses = list.filter((device) => {
+            console.log('[bt] checking device:', device.name, 'id:', device.id);
+            return this.isGlassesDevice(device);
+        });
+        
+        console.log('[bt] filtered glasses devices:', listGlasses);
     
         if (listGlasses.length < 1) {
             console.warn('glassesInit: Anny glasses not paired');
@@ -78,11 +103,25 @@ export default {
             // Tts.speak('Se han detectado múltiples Lentes Anny, el funcionamiento puede no ser el esperado');
         }
     
+        // Verificación adicional antes de acceder al primer elemento
+        const firstGlasses = listGlasses[0];
+        if (!firstGlasses) {
+            console.error('[bt] No glasses device found in list');
+            return { success: false, isCaecus: false, glassesId: null };
+        }
+    
         // Tts.stop();
         // Tts.speak('Lentes Anny detectados, conectando...');
     
-        const deviceMac = listGlasses[0].id;
+        const deviceMac = firstGlasses.id;
         console.log('[bt] glasses mac address is:', deviceMac);
+        console.log('[bt] device object:', firstGlasses);
+        
+        // Verificar que la dirección MAC sea válida
+        if (!deviceMac || typeof deviceMac !== 'string' || deviceMac.length < 10) {
+            console.error('[bt] Invalid MAC address detected:', deviceMac);
+            return { success: false, isCaecus: false, glassesId: null };
+        }
         
         const result = await this.glassesConnectServiceBT({
         deviceMac,

@@ -2,9 +2,9 @@ import colors from '@/assets/colors';
 import * as Speech from 'expo-speech';
 import React from 'react';
 import {
-    AccessibilityInfo,
-    Alert, Dimensions, ScrollView, StyleSheet,
-    TouchableOpacity
+  AccessibilityInfo,
+  Alert, Dimensions, ScrollView, StyleSheet,
+  TouchableOpacity
 } from 'react-native';
 import { useNavigation } from '../../context/NavigationContext';
 import { useColorScheme } from '../../hooks/useColorScheme';
@@ -107,6 +107,18 @@ export function NavigationControls() {
     }
     fetchAddress();
   }, [state.currentLocation]);
+
+  // Debug logs
+  React.useEffect(() => {
+    console.log('=== NavigationControls DEBUG ===');
+    console.log('state.currentLocation:', state.currentLocation);
+    console.log('state.selectedDestination:', state.selectedDestination);
+    console.log('state.isLoading:', state.isLoading);
+    console.log('state.isNavigating:', state.isNavigating);
+    console.log('state.error:', state.error);
+    console.log('Button should be enabled:', (state.currentLocation && state.selectedDestination && !state.isLoading));
+    console.log('================================');
+  }, [state.currentLocation, state.selectedDestination, state.isLoading, state.isNavigating, state.error]);
 
   return (
     <ScrollView

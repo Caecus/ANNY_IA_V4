@@ -11,7 +11,7 @@ import { GlassesProtocolEnum } from '../types/glasses-protocol.enum';
 // import Tts from 'react-native-tts';
 // import dgram from 'react-native-udp';
 // import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
-import { getEnvVar } from '../utils/env';
+import { getEnvVar, getGlassesConfig } from '../utils/env';
 import { AccessibilityContext, VoiceCommand } from './AccessibilityContext';
 
 const { AudioManagerModule } = NativeModules;
@@ -45,9 +45,9 @@ export interface GlassesContextProps {
     glassesStreamUrl: () => Promise<string>;
     scanBluetoothDevices: () => Promise<void>;
     btDevices: Device[];
-    glassesSocketConnect: (serverUrl: string) => Promise<boolean>;
+    glassesSocketConnect: (serverUrl?: string) => Promise<boolean>;
     glassesSocketDisconnect: () => void;
-    glassesRecognizeImage: (type?: 'object' | 'text' | 'money' | 'document') => Promise<string>;
+    glassesRecognizeImage: (type?: 'description' | 'text' | 'objects' | 'faces' | 'landmarks' | 'money' | 'custom') => Promise<string>;
     glassesScanText: () => Promise<string>;
     glassesRecognizeMoney: () => Promise<string>;
     glassesReadDocument: () => Promise<string>;
@@ -55,8 +55,9 @@ export interface GlassesContextProps {
     isSocketConnected: () => boolean;
     glassesStartStreamAnalysis: (analysisType?: 'continuous' | 'on_command') => Promise<boolean>;
     glassesStopStreamAnalysis: () => void;
-    glassesAnalyzeCurrentFrame: (type?: 'scene' | 'text' | 'money' | 'objects') => Promise<void>;
+    glassesAnalyzeCurrentFrame: (type?: 'description' | 'text' | 'objects' | 'faces' | 'landmarks' | 'money' | 'custom') => Promise<void>;
     isStreamAnalysisActive: () => boolean;
+    glassesTestConnectivity: () => Promise<void>;
 }
 
 export const GlassesContext = createContext({} as GlassesContextProps);
@@ -77,8 +78,8 @@ export const GlassesProvider = ({ children }: any) => {
                     await glassesStartStreaming(glassesDetectionPortRef.current); 
                 } 
             },
-          },
-          {
+        },
+        {
             name: "parar detección",
             roles: ["PDV"],
             description: "Detiene la detección de objetos con lentes Anny",
@@ -87,34 +88,70 @@ export const GlassesProvider = ({ children }: any) => {
                 await glassesStopStreaming()
                 await glassesStopStreamingListener()
             },
-          },
-          {
+        },
+        {
             name: "escanear texto",
             roles: ["PDV"],
             description: "Lee texto con los anteojos CAECUS",
             action: async () => { 
                 console.log("GlassesCommand ->  escanear texto")
-                await glassesScanText()
+                await glassesAnalyzeCurrentFrame('text')
             },
-          },
-          {
-            name: "reconocer billete",
+        },
+        {
+            name: "detectar objetos",
             roles: ["PDV"],
-            description: "Identifica billetes con los anteojos CAECUS",
+            description: "Identifica objetos con los anteojos CAECUS",
             action: async () => { 
-                console.log("GlassesCommand ->  reconocer billete")
-                await glassesRecognizeMoney()
+                console.log("GlassesCommand ->  detectar objetos")
+                await glassesAnalyzeCurrentFrame('objects')
             },
-          },
-          {
+        },
+        {
+            name: "detectar caras",
+            roles: ["PDV"],
+            description: "Detecta caras y emociones con los anteojos CAECUS",
+            action: async () => { 
+                console.log("GlassesCommand ->  detectar caras")
+                await glassesAnalyzeCurrentFrame('faces')
+            },
+        },
+        {
+            name: "identificar lugar",
+            roles: ["PDV"],
+            description: "Identifica lugares conocidos con los anteojos CAECUS",
+            action: async () => { 
+                console.log("GlassesCommand ->  identificar lugar")
+                await glassesAnalyzeCurrentFrame('landmarks')
+            },
+        },
+        {
+            name: "detectar dinero",
+            roles: ["PDV"],
+            description: "Detecta billetes y monedas con los anteojos CAECUS",
+            action: async () => { 
+                console.log("GlassesCommand ->  detectar dinero")
+                await glassesAnalyzeCurrentFrame('money')
+            },
+        },
+        {
             name: "describir escena",
             roles: ["PDV"],
             description: "Describe lo que ven los anteojos CAECUS",
             action: async () => { 
                 console.log("GlassesCommand ->  describir escena")
-                await glassesDescribeScene()
+                await glassesAnalyzeCurrentFrame('description')
             },
-          }
+        },
+        {
+            name: "probar conexión",
+            roles: ["PDV"],
+            description: "Prueba la conectividad a servidores de análisis",
+            action: async () => { 
+                console.log("GlassesCommand ->  probar conexión")
+                await glassesTestConnectivity()
+            },
+        }
     ]
 
     // state variables
@@ -191,12 +228,29 @@ export const GlassesProvider = ({ children }: any) => {
     }
 
     const glassesResestState = () => {
+        const config = getGlassesConfig();
+        
         setGlassesLoadingWiFi(false);
         glassesActive.current = false
         glassesIdRef.current = '';
         glassesReadListenerConnectedRef.current = false;
-        glassesDetectionPortRef.current = 8888;
-        glassesDetectionCodeRef.current = '';
+        
+        // Configurar valores según modo debug/release
+        if (config.isDebugMode && config.useSimulatedData) {
+            // En debug: configurar valores simulados para permitir testing
+            glassesDetectionPortRef.current = config.streamingConfig.simulatedPort;
+            glassesDetectionCodeRef.current = config.streamingConfig.simulatedCode;
+            console.log('[GlassesContext] DEBUG MODE: Configurando parámetros simulados', {
+                port: glassesDetectionPortRef.current,
+                code: glassesDetectionCodeRef.current
+            });
+        } else {
+            // En release: valores reales
+            glassesDetectionPortRef.current = 8888;
+            glassesDetectionCodeRef.current = '';
+            console.log('[GlassesContext] RELEASE MODE: Configurando parámetros reales');
+        }
+        
         glassesDetectionIntervalIdRef.current = null;
         if (GlassesReadInterval.current) {
             clearInterval(GlassesReadInterval.current)
@@ -637,7 +691,7 @@ export const GlassesProvider = ({ children }: any) => {
     }
 
     // Funciones de Socket para comandos avanzados
-    const glassesSocketConnect = async (serverUrl: string): Promise<boolean> => {
+    const glassesSocketConnect = async (serverUrl?: string): Promise<boolean> => {
         try {
             return await SocketGlasses.connect(serverUrl);
         } catch (error) {
@@ -650,11 +704,14 @@ export const GlassesProvider = ({ children }: any) => {
         SocketGlasses.disconnect();
     };
 
-    const glassesRecognizeImage = async (type: 'object' | 'text' | 'money' | 'document' = 'object'): Promise<string> => {
+    const glassesRecognizeImage = async (type: 'description' | 'text' | 'objects' | 'faces' | 'landmarks' | 'money' | 'custom' = 'description'): Promise<string> => {
         if (!glassesActive.current) {
             throw new Error('Anteojos no conectados');
         }
-        return await SocketGlasses.recognizeImage(type);
+        
+        // Usar el nuevo método de SocketGlasses que maneja todos los tipos
+        await glassesAnalyzeCurrentFrame(type);
+        return `Análisis ${type} iniciado`;
     };
 
     const glassesScanText = async (): Promise<string> => {
@@ -713,7 +770,7 @@ export const GlassesProvider = ({ children }: any) => {
         SocketGlasses.stopStreamAnalysis();
     };
 
-    const glassesAnalyzeCurrentFrame = async (type: 'scene' | 'text' | 'money' | 'objects' = 'scene'): Promise<void> => {
+    const glassesAnalyzeCurrentFrame = async (type: 'description' | 'text' | 'objects' | 'faces' | 'landmarks' | 'money' | 'custom' = 'description'): Promise<void> => {
         if (!glassesActive.current) {
             throw new Error('Anteojos no conectados');
         }
@@ -733,6 +790,10 @@ export const GlassesProvider = ({ children }: any) => {
 
     const isStreamAnalysisActive = (): boolean => {
         return SocketGlasses.isStreamAnalysisRunning();
+    };
+
+    const glassesTestConnectivity = async (): Promise<void> => {
+        return await SocketGlasses.testConnectivity();
     };
 
     return (
@@ -778,6 +839,7 @@ export const GlassesProvider = ({ children }: any) => {
                 glassesStopStreamAnalysis,
                 glassesAnalyzeCurrentFrame,
                 isStreamAnalysisActive,
+                glassesTestConnectivity,
             }}>
             {children}
         </GlassesContext.Provider>
