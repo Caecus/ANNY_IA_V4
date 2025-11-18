@@ -1,22 +1,40 @@
+import colors from '@/assets/colors';
+import { speak } from '@/services/speaker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import * as Location from 'expo-location';
-import * as Speech from 'expo-speech';
 import React, { useEffect, useRef, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    Dimensions,
-    StyleSheet,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  StyleSheet,
+  TouchableOpacity,
+  View
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { ThemedText } from '../../components/ThemedText';
+import { ThemedView } from '../../components/ThemedView';
+import { AccessibleSearch } from '../../components/navigation/AccessibleSearch';
+import { NavigationControls } from '../../components/navigation/NavigationControls';
+import { Colors } from '../../constants/Colors';
+import { useNavigation } from '../../context/NavigationContext';
+import { useColorScheme } from '../../hooks/useColorScheme';
 
-type RouteParams = {
-  voiceDestination?: string;
-};
-// Importación condicional de MapView para evitar errores
+const { width, height } = Dimensions.get('window');
+
+function getDistanceMeters(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+}
+
 let MapView: any = null;
 let Marker: any = null;
 let Polyline: any = null;
@@ -29,34 +47,25 @@ try {
   Marker = Maps.Marker;
   Polyline = Maps.Polyline;
   PROVIDER_GOOGLE = Maps.PROVIDER_GOOGLE;
-  // Verificar que realmente esté disponible
   isMapAvailable = !!(MapView && Marker && Polyline);
 } catch (error) {
   console.warn('react-native-maps no está disponible:', error);
   isMapAvailable = false;
 }
 
-import colors from '@/assets/colors';
-import { ThemedText } from '../../components/ThemedText';
-import { ThemedView } from '../../components/ThemedView';
-import { AccessibleSearch } from '../../components/navigation/AccessibleSearch';
-import { NavigationControls } from '../../components/navigation/NavigationControls';
-import { Colors } from '../../constants/Colors';
-import { useNavigation } from '../../context/NavigationContext';
-import { useColorScheme } from '../../hooks/useColorScheme';
-
-const { width, height } = Dimensions.get('window');
+type RouteParams = {
+  voiceDestination?: string;
+};
 
 interface MapExploreProps {}
 
 export default function MapExplore({}: MapExploreProps) {
-  const { state, searchPlaces, stopNavigation, startNavigation } = useNavigation();
+  const { state, searchPlaces, stopNavigation } = useNavigation();
   const colorScheme = useColorScheme();
   const themeColors = Colors[colorScheme ?? 'light'];
   const route = useRoute<RouteProp<{ params: RouteParams }, 'params'>>();
-  
   const mapRef = useRef<any>(null);
-  // Usar ubicación actual si está disponible, sino fallback a Córdoba, Argentina
+
   const cordobaCoords = { latitude: -31.4167, longitude: -64.1833 };
   const initialRegion = state.currentLocation
     ? {
@@ -72,33 +81,145 @@ export default function MapExplore({}: MapExploreProps) {
         longitudeDelta: 0.01,
       };
   const [mapRegion, setMapRegion] = useState(initialRegion);
-  // TTS amigable
-  const speak = (text: string) => {
-    Speech.speak(text, { language: 'es-ES', rate: 0.9 });
-  };
-  // Ejecutar getCurrentLocation del contexto al montar la pantalla
+
   const { getCurrentLocation } = useNavigation();
   useEffect(() => {
     getCurrentLocation();
   }, []);
-  
+
   const [isSearchVisible, setIsSearchVisible] = useState(false);
   const [isControlsVisible, setIsControlsVisible] = useState(false);
-  const [travelMode, setTravelMode] = useState<'walking' | 'transit' | 'driving'>('walking');
+  const [spokenSteps, setSpokenSteps] = useState<Set<number>>(new Set());
+  const [allStepsSpoken, setAllStepsSpoken] = useState(false);
+  const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
-  // Manejar navegación iniciada por comando de voz
+  // Función para limpiar navegación
+  const resetNavigationState = () => {
+    setSpokenSteps(new Set());
+    setAllStepsSpoken(false);
+    setCurrentStepIndex(0);
+  };
+
+  // Dictado reactivo basado en ubicación (no cambia)
+  useEffect(() => {
+    if (
+      !state.isNavigating ||
+      !state.currentRoute ||
+      !state.currentRoute.steps ||
+      !state.currentLocation
+    )
+      return;
+
+    const steps = state.currentRoute.steps;
+    if (spokenSteps.size === steps.length && !allStepsSpoken) {
+      setAllStepsSpoken(true);
+      speak('Ha llegado a su destino');
+    }
+    if (allStepsSpoken) return;
+
+    steps.forEach((step: any, idx: number) => {
+      if (spokenSteps.has(idx)) return;
+      const target = step.start_location || step.end_location;
+      if (!target) return;
+      const dist = getDistanceMeters(
+        state.currentLocation.latitude,
+        state.currentLocation.longitude,
+        target.lat,
+        target.lng
+      );
+      if (dist < 30) {
+        let instruction = '';
+        const mode = String(step.travel_mode).toLowerCase();
+        if (mode === 'walking') {
+          instruction = `Paso ${idx + 1}: ${step.html_instructions?.replace(/<[^>]*>/g, '')}`;
+        } else if (mode === 'transit' && step.transit_details) {
+          const t = step.transit_details;
+          instruction = `Paso ${idx + 1}: Toma el colectivo ${t.line?.short_name || ''} (${t.line?.name || ''}) desde ${t.departure_stop?.name || ''} hasta ${t.arrival_stop?.name || ''}. Salida: ${t.departure_time?.text || ''}, llegada: ${t.arrival_time?.text || ''}. Duración: ${t.duration?.text || ''}`;
+          if (t.line?.agencies) {
+            instruction += `. Operado por: ${t.line.agencies.map((a: any) => a.name).join(', ')}`;
+          }
+        } else if (mode === 'driving') {
+          instruction = `Paso ${idx + 1}: ${step.html_instructions?.replace(/<[^>]*>/g, '')}`;
+        }
+        if (step.crosswalk || step.intersection) {
+          instruction += `. Prepárate para cruzar en ${step.crosswalk?.name || step.intersection?.name || 'la próxima intersección'}`;
+        }
+        if (instruction) {
+          speak(instruction);
+          setSpokenSteps(prev => new Set(prev).add(idx));
+          setCurrentStepIndex(idx);
+        }
+      }
+    });
+  }, [state.currentLocation, state.currentRoute, spokenSteps, allStepsSpoken]);
+
+  // Aviso de distancia solo si el usuario NO ha llegado
+  useEffect(() => {
+    if (
+      !state.isNavigating ||
+      !state.currentRoute ||
+      !state.currentRoute.steps ||
+      !state.currentLocation
+    ) return;
+
+    const steps = state.currentRoute.steps;
+    let interval: NodeJS.Timeout | null = null;
+
+    // Guardar la última distancia anunciada
+    let lastAnnouncedDistance = -1;
+    const announceDistance = () => {
+      const nextIdx = steps.findIndex((step, idx) => !spokenSteps.has(idx));
+      if (nextIdx === -1) return;
+      const target = steps[nextIdx].start_location || steps[nextIdx].end_location;
+      if (!target) return;
+
+      const dist = getDistanceMeters(
+        state.currentLocation.latitude,
+        state.currentLocation.longitude,
+        target.lat,
+        target.lng
+      );
+      if (dist <= 30) {
+        setSpokenSteps(prev => new Set(prev).add(nextIdx));
+        lastAnnouncedDistance = -1;
+        return;
+      }
+      // Solo anunciar si la distancia cambia al menos 5 metros
+      if (lastAnnouncedDistance === -1 || Math.abs(dist - lastAnnouncedDistance) >= 5) {
+        let text = `Faltan ${Math.max(0, Math.round(dist))} metros para el próximo paso.`;
+        // ...eliminar referencias a crosswalk/intersection si no existen en el modelo...
+        speak(text);
+        lastAnnouncedDistance = dist;
+      }
+    };
+
+    interval = setInterval(announceDistance, 8000);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [
+    state.isNavigating,
+    state.currentRoute,
+    state.currentLocation,
+    spokenSteps,
+  ]);
+
+  useEffect(() => {
+    if (allStepsSpoken) {
+      stopNavigation();
+    }
+  }, [allStepsSpoken, stopNavigation]);
+
   useEffect(() => {
     const voiceDestination = route.params?.voiceDestination;
     if (voiceDestination) {
       setIsSearchVisible(true);
       speak('Ya estás en el explorador. Procesando tu destino: ' + voiceDestination);
       Alert.alert('Explorador', 'Procesando destino: ' + voiceDestination);
-      // Buscar automáticamente el destino mencionado por voz y avisar
-  searchPlaces(voiceDestination);
+      searchPlaces(voiceDestination);
     }
-  }, [route.params?.voiceDestination, searchPlaces, travelMode]);
+  }, [route.params?.voiceDestination, searchPlaces]);
 
-  // Actualizar región del mapa cuando cambie la ubicación
   useEffect(() => {
     if (state.currentLocation) {
       const newRegion = {
@@ -108,18 +229,15 @@ export default function MapExplore({}: MapExploreProps) {
         longitudeDelta: 0.01,
       };
       setMapRegion(newRegion);
-      
-      // Animar mapa a la nueva ubicación
+
       if (mapRef.current) {
         mapRef.current.animateToRegion(newRegion, 1000);
       }
     }
   }, [state.currentLocation]);
 
-    // Generar polyline de la ruta (sin duplicados, mínimo dos puntos)
   const getRouteCoordinates = () => {
     if (!state.currentRoute || !state.currentRoute.steps) return [];
-    console.log(state.currentRoute, 'SOY LA RUTA=>>>>>>>>>>>')
     const coordinates: { latitude: number; longitude: number }[] = [];
     state.currentRoute.steps.forEach((step, idx) => {
       if (step.start_location) {
@@ -149,11 +267,9 @@ export default function MapExplore({}: MapExploreProps) {
         }
       }
     });
-    // Solo retorna si hay al menos dos puntos
     return coordinates.length > 1 ? coordinates : [];
   };
 
-  // Centrar mapa en todos los puntos de la Polyline roja
   useEffect(() => {
     if (state.currentRoute && mapRef.current) {
       const polylineCoords = getRouteCoordinates();
@@ -166,20 +282,19 @@ export default function MapExplore({}: MapExploreProps) {
     }
   }, [state.currentRoute]);
 
-  // Genera polylines separadas para cada tramo (caminar, colectivo, caminar)
   const getSegmentedPolylines = () => {
     if (!state.currentRoute || !state.currentRoute.steps) return [];
     const segments = [];
     let currentSegment = [];
     let currentMode = null;
     state.currentRoute.steps.forEach((step, idx) => {
-      // Detecta cambio de modo
-      if (currentMode !== step.travel_mode) {
+      const mode = String(step.travel_mode).toUpperCase();
+      if (currentMode !== mode) {
         if (currentSegment.length > 1) {
           segments.push({ coordinates: [...currentSegment], mode: currentMode });
         }
         currentSegment = [];
-        currentMode = step.travel_mode;
+        currentMode = mode;
       }
       if (step.start_location) {
         currentSegment.push({
@@ -215,7 +330,6 @@ export default function MapExplore({}: MapExploreProps) {
         });
         return;
       }
-      // Timeout robusto para obtener ubicación
       let location: Location.LocationObject | undefined;
       try {
         location = await Promise.race([
@@ -270,107 +384,104 @@ export default function MapExplore({}: MapExploreProps) {
     }
   };
 
-    // TTS para loading amigable (hook debe ir fuera del render)
   useEffect(() => {
-    console.log('[Ubicación] useEffect state.isLoading:', state.isLoading);
-    if (state.isLoading) {
+    if (state.isLoading && state.isNavigating) {
       speak('Procesando búsqueda o navegación, por favor espera.');
     }
-  }, [state.isLoading]);
-
-    // TTS para cada segmento al iniciar navegación
-  useEffect(() => {
-    if (!state.currentRoute || !state.currentRoute.steps) return;
-    if (!state.isNavigating) return;
-    state.currentRoute.steps.forEach((step, idx) => {
-      if (step.travel_mode === 'walking') {
-        speak(`Tramo ${idx + 1}: Camina. ${step.html_instructions?.replace(/<[^>]*>/g, '')}`);
-      } else if (step.travel_mode === 'transit' && step.transit_details) {
-        const t = step.transit_details;
-        speak(`Tramo ${idx + 1}: Toma el colectivo ${t.line?.short_name || ''} (${t.line?.name || ''}) desde ${t.departure_stop?.name || ''} hasta ${t.arrival_stop?.name || ''}. Salida: ${t.departure_time?.text || ''}, llegada: ${t.arrival_time?.text || ''}. Duración: ${t.duration?.text || ''}`);
-        if (t.line?.agencies) {
-          speak(`Operado por: ${t.line.agencies.map(a => a.name).join(', ')}`);
-        }
-      } else if (step.travel_mode === 'driving') {
-        speak(`Tramo ${idx + 1}: Maneja. ${step.html_instructions?.replace(/<[^>]*>/g, '')}`);
-      }
-    });
-  }, [state.currentRoute, state.isNavigating]);
+  }, [state.isLoading, state.isNavigating]);
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Mapa */}
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        provider={PROVIDER_GOOGLE}
-        initialRegion={mapRegion}
-        showsUserLocation={true}
-        showsMyLocationButton={false}
-        showsCompass={true}
-        showsScale={true}
-        followsUserLocation={state.isNavigating}
-        // customMapStyle={colorScheme === 'dark' ? darkMapStyle : []}
-      >
-        {/* Marcador de destino */}
-        {state.selectedDestination && (
-          <Marker
-            coordinate={{
-              latitude: state.selectedDestination.location.lat,
-              longitude: state.selectedDestination.location.lng,
-            }}
-            title={state.selectedDestination.name}
-            description="Destino seleccionado"
-            pinColor="red"
-          />
-        )}
-        {/* Pintar cada segmento con color según modo */}
-        {state.currentRoute && getSegmentedPolylines().map((segment, idx) => (
-          <Polyline
-            key={idx}
-            coordinates={segment.coordinates}
-            strokeColor={
-              segment.mode === 'WALKING' ? 'blue' :
-              segment.mode === 'TRANSIT' ? 'green' :
-              segment.mode === 'DRIVING' ? 'orange' : 'red'
-            }
-            strokeWidth={6}
-          />
-        ))}
-      </MapView>
-
-      {/* Botones flotantes */}
+      {isMapAvailable ? (
+        <MapView
+          ref={mapRef}
+          style={styles.map}
+          provider={PROVIDER_GOOGLE}
+          initialRegion={mapRegion}
+          showsUserLocation={true}
+          showsMyLocationButton={false}
+          showsCompass={true}
+          showsScale={true}
+          followsUserLocation={state.isNavigating}
+        >
+          {state.selectedDestination && (
+            <Marker
+              coordinate={{
+                latitude: state.selectedDestination.location.lat,
+                longitude: state.selectedDestination.location.lng,
+              }}
+              title={state.selectedDestination.name}
+              description="Destino seleccionado"
+              pinColor="red"
+            />
+          )}
+          {state.currentRoute && getSegmentedPolylines().map((segment, idx) => (
+            <Polyline
+              key={idx}
+              coordinates={segment.coordinates}
+              strokeColor={
+                segment.mode === 'WALKING' ? 'blue' :
+                segment.mode === 'TRANSIT' ? 'green' :
+                segment.mode === 'DRIVING' ? 'orange' : 'red'
+              }
+              strokeWidth={6}
+            />
+          ))}
+        </MapView>
+      ) : (
+        <View style={styles.fallbackContainer}>
+          <MaterialIcons name="map" size={120} color="#CCC" />
+          <ThemedText style={styles.fallbackTitle}>
+            Mapa no disponible
+          </ThemedText>
+          <ThemedText style={styles.fallbackText}>
+            No se pudo cargar el componente de mapa en este dispositivo.
+          </ThemedText>
+        </View>
+      )}
       <View style={styles.floatingButtons}>
-        {/* Botón Búsqueda */}
         <TouchableOpacity
           style={[styles.floatingButton, { backgroundColor: themeColors.background }]}
           onPress={() => setIsSearchVisible(!isSearchVisible)}
           accessible={true}
           accessibilityLabel="Mostrar búsqueda de destinos"
         >
-          <MaterialIcons 
-            name={isSearchVisible ? "close" : "search"} 
-            size={36} 
-            color={colors.primary} 
+          <MaterialIcons
+            name={isSearchVisible ? "close" : "search"}
+            size={36}
+            color={colors.primary}
           />
         </TouchableOpacity>
-
-        {/* Botón Controles */}
         <TouchableOpacity
           style={[styles.floatingButton, { backgroundColor: themeColors.background }]}
           onPress={() => setIsControlsVisible(!isControlsVisible)}
           accessible={true}
           accessibilityLabel="Mostrar controles de navegación"
         >
-          <MaterialIcons 
-            name={isControlsVisible ? "keyboard-arrow-down" : "navigation"} 
-            size={36} 
-            color={colors.primary} 
+          <MaterialIcons
+            name={isControlsVisible ? "keyboard-arrow-down" : "navigation"}
+            size={36}
+            color={colors.primary}
           />
         </TouchableOpacity>
       </View>
 
-      {/* Panel de Búsqueda */}
+      {state.isNavigating && (
+        <TouchableOpacity
+          style={styles.cancelNavButton}
+          onPress={() => {
+            stopNavigation();
+            resetNavigationState();
+            speak('Navegación detenida');
+          }}
+          accessible={true}
+          accessibilityLabel="Detener navegación"
+        >
+          <MaterialIcons name="cancel" size={24} color="#c00" />
+          <ThemedText style={styles.cancelNavText}>Detener Navegación</ThemedText>
+        </TouchableOpacity>
+      )}
+
       {isSearchVisible && (
         <ThemedView style={styles.searchPanel}>
           <ThemedView style={styles.panelHeader}>
@@ -383,7 +494,6 @@ export default function MapExplore({}: MapExploreProps) {
         </ThemedView>
       )}
 
-      {/* Panel de Controles */}
       {isControlsVisible && (
         <ThemedView style={styles.controlsPanel}>
           <ThemedView style={styles.panelHeader}>
@@ -396,20 +506,18 @@ export default function MapExplore({}: MapExploreProps) {
         </ThemedView>
       )}
 
-      {/* Información de navegación activa y depuración */}
       {state.isNavigating && (
         <ThemedView style={styles.navigationInfo}>
           <ThemedText style={styles.navigationTitle}>
             🚶 Navegando...
           </ThemedText>
-          {state.currentStep && (
+          {state.currentRoute && state.currentRoute.steps && (
             <ThemedText style={styles.navigationStep}>
-              Paso {state.currentStepIndex + 1} de {state.totalSteps}: {state.currentStep.distance.text}
+              Paso {currentStepIndex + 1} de {state.currentRoute.steps.length}: {state.currentRoute.steps[currentStepIndex]?.distance?.text ?? ''}
             </ThemedText>
           )}
         </ThemedView>
       )}
-      {/* Loading indicator */}
       {state.isLoading && (
         <View style={styles.loadingOverlay}>
           <ActivityIndicator size="large" color={themeColors.tint} />
@@ -419,32 +527,6 @@ export default function MapExplore({}: MapExploreProps) {
     </SafeAreaView>
   );
 }
-
-// Estilo de mapa oscuro
-const darkMapStyle = [
-  {
-    "elementType": "geometry",
-    "stylers": [{"color": "#242f3e"}]
-  },
-  {
-    "elementType": "labels.text.stroke",
-    "stylers": [{"color": "#242f3e"}]
-  },
-  {
-    "elementType": "labels.text.fill",
-    "stylers": [{"color": "#746855"}]
-  },
-  {
-    "featureType": "road",
-    "elementType": "geometry",
-    "stylers": [{"color": "#38414e"}]
-  },
-  {
-    "featureType": "water",
-    "elementType": "geometry",
-    "stylers": [{"color": "#17263c"}]
-  }
-];
 
 const styles = StyleSheet.create({
   container: {
@@ -595,7 +677,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: 'white',
   },
-  // Estilos para fallback cuando MapView no está disponible
   fallbackContainer: {
     flex: 1,
     justifyContent: 'center',

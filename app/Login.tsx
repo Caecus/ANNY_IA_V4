@@ -1,15 +1,15 @@
 
 
+import colors from '@/assets/colors';
+import Button from '@/components/common/Button';
+import Text from '@/components/common/Text';
+import { useAuth } from '@/hooks/useAuth';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, Dimensions, Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, TextInput, View } from 'react-native';
-import colors from '../../../assets/colors';
-import Button from '../../../components/common/Button';
-import Text from '../../../components/common/Text';
-import { useAuth } from '../../../hooks/useAuth';
 
-const LoginScreen = () => {
+const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
@@ -23,7 +23,7 @@ const LoginScreen = () => {
             const result = await login(payload);
 
             if (result?.access_token && result?.user) {
-                router.replace('/(tabs)');
+                router.replace('/index');
             } else {
                 Alert.alert('Error', result?.message || 'Credenciales incorrectas');
             }
@@ -51,7 +51,7 @@ const LoginScreen = () => {
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.cardGlass}>
-                            <Image source={require('../../../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
+                            <Image source={require('../assets/images/logo.png')} style={styles.logo} resizeMode="contain" />
                             <Text type="h1" textAlign="center" style={styles.title} text="Iniciar sesión" />
                             <Text type="h3" textAlign="center" style={styles.subtitle} text="¡Bienvenido de nuevo!" />
                             <TextInput
@@ -182,4 +182,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default LoginScreen;
+export default Login;

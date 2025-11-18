@@ -48,12 +48,12 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     useEffect(() => {
         const currentRoute = segments.join('/');
         if (!isAuthenticated && !currentRoute.includes('Login')) {
-            router.replace('/Login');
+            router.replace('Login');
         } else if (
             isAuthenticated &&
-            !['index', 'Explore', 'ProfileScreen'].some(r => currentRoute.includes(r))
+            !currentRoute.includes('index') &&
+            segments[0] !== '(stack)'
         ) {
-            console.log('Redirigiendo a index');
             router.replace('/');
         }
     }, [isAuthenticated, segments]);
@@ -85,10 +85,10 @@ export default function RootLayout() {
                             <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
                                 <AuthGate>
                                     <Stack>
-                                        <Stack.Screen name="Login" options={{ headerShown: false }} />
+                                        <Stack.Screen name="screens/auth/Login" options={{ headerShown: false }} />
                                         <Stack.Screen name="index" options={{ title: 'Inicio', headerShown: false }} />
                                         <Stack.Screen name="ProfileScreen" options={{ title: 'Perfil', headerShown: false }} />
-                                        <Stack.Screen name="Explore" options={{ title: 'Mapa', headerShown: false }} />
+                                        <Stack.Screen name="explore" options={{ title: 'Mapa', headerShown: false }} />
                                         <Stack.Screen name="+not-found" />
                                     </Stack>
                                 </AuthGate>

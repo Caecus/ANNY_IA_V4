@@ -1,5 +1,5 @@
 import colors from '@/assets/colors';
-import * as Speech from 'expo-speech';
+import { speak } from '@/services/speaker';
 import React from 'react';
 import {
   AccessibilityInfo,
@@ -17,10 +17,6 @@ export function NavigationControls() {
   const { state, startNavigation, stopNavigation, repeatInstruction, getCurrentLocation } = useNavigation();
   const colorScheme = useColorScheme();
   const [navigationMode, setNavigationMode] = React.useState<'walking' | 'transit' | 'driving'>('walking');
-
-    const speak = (text: string) => {
-        Speech.speak(text, { language: 'es-ES', rate: 0.9 });
-    };
 
   const handleGetLocation = async () => {
     try {
@@ -206,56 +202,6 @@ export function NavigationControls() {
           </ThemedView>
         )}
       </ThemedView>
-
-      {/* Información del paso actual */}
-      {state.isNavigating && state.currentStep && (
-        <ThemedView style={styles.section}>
-          <ThemedText style={styles.sectionTitle}>Paso Actual</ThemedText>
-          <ThemedView 
-            style={[styles.stepInfo, { backgroundColor: colors.secondary + '10' }]}
-            accessible={true}
-            accessibilityLabel={`Paso ${state.currentStepIndex + 1} de ${state.totalSteps}`}
-          >
-            <ThemedText style={styles.stepCounter}>
-              Paso {state.currentStepIndex + 1} de {state.totalSteps}
-            </ThemedText>
-            <ThemedText style={styles.stepDistance}>
-              {state.currentStep.distance.text}
-            </ThemedText>
-            {/* Mostrar detalles de colectivo si existen */}
-            {state.currentStep.transit_details ? (
-              <>
-                {console.log('[TRANSIT]', state.currentStep.transit_details)}
-                <ThemedText style={styles.stepTransit}>
-                  {`Toma el colectivo ${state.currentStep.transit_details.line?.short_name || ''} (${state.currentStep.transit_details.line?.name || ''}) desde ${state.currentStep.transit_details.departure_stop?.name || ''} hasta ${state.currentStep.transit_details.arrival_stop?.name || ''}. Salida: ${state.currentStep.transit_details.departure_time?.text || ''}, llegada: ${state.currentStep.transit_details.arrival_time?.text || ''}. Duración: ${state.currentStep.transit_details.duration?.text || ''}`}
-                </ThemedText>
-                {state.currentStep.transit_details.line?.agencies && (
-                  <ThemedText style={styles.stepTransitAgency}>
-                    {`Operado por: ${state.currentStep.transit_details.line.agencies.map(a => a.name).join(', ')}`}
-                  </ThemedText>
-                )}
-                {/* TTS para colectivo */}
-                {(() => {
-                  const ttsMsg = `Toma el colectivo ${state.currentStep.transit_details.line?.short_name || ''} (${state.currentStep.transit_details.line?.name || ''}) desde ${state.currentStep.transit_details.departure_stop?.name || ''} hasta ${state.currentStep.transit_details.arrival_stop?.name || ''}. Salida: ${state.currentStep.transit_details.departure_time?.text || ''}, llegada: ${state.currentStep.transit_details.arrival_time?.text || ''}. Duración: ${state.currentStep.transit_details.duration?.text || ''}`;
-                  speak(ttsMsg);
-                  if (state.currentStep.transit_details.line?.agencies) {
-                    speak(`Operado por: ${state.currentStep.transit_details.line.agencies.map(a => a.name).join(', ')}`);
-                  }
-                  return null;
-                })()}
-              </>
-            ) : (
-              <>
-                {(() => { console.log('[STEP]', state.currentStep); return null; })()}
-                <ThemedText style={styles.stepInstruction}>
-                  {state.currentStep.html_instructions?.replace(/<[^>]*>/g, '')}
-                </ThemedText>
-              </>
-            )}
-          </ThemedView>
-        </ThemedView>
-      )}
-
       {/* Indicador de carga */}
       {state.isLoading && (
         <ThemedView style={styles.loadingContainer}>

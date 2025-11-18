@@ -52,11 +52,11 @@ export function getSocketAIUrl(): string {
   const isDebug = isDebugMode();
   
   // // En desarrollo, usar servidor local
-  // if (isDebug) {
-  //   const devUrl = getEnvVar('APP_SOCKET_AI_URL_DEVELOPMENT') || getEnvVar('APP_SOCKET_AI_URL');
-  //   console.log('[ENV] Usando servidor Socket AI de DESARROLLO:', devUrl);
-  //   return devUrl || 'http://192.168.31.254:4001';
-  // }
+  if (isDebug) {
+    const devUrl = getEnvVar('APP_SOCKET_AI_URL_DEVELOPMENT') || getEnvVar('APP_SOCKET_AI_URL');
+    console.log('[ENV] Usando servidor Socket AI de DESARROLLO:', devUrl);
+    return devUrl || 'http://192.168.31.254:4001';
+  }
   
   // En producción, usar servidor AWS
   const prodUrl = getEnvVar('APP_SOCKET_AI_URL_PRODUCTION');

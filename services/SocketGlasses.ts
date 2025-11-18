@@ -1,5 +1,5 @@
 import axios from 'axios';
-import * as Speech from 'expo-speech';
+import { speak } from 'expo-speech';
 import { io, Socket } from 'socket.io-client';
 import { getEnvVar, getGlassesConfig, getSocketAIUrl } from '../utils/env';
 
@@ -20,11 +20,6 @@ interface GlassesFrame {
     code: string;
     model?: string;
 }
-
-const speak = (text: string) => {
-    Speech.speak(text, { language: 'es-ES', rate: 0.9 });
-};
-
 class SocketGlassesService {
     private socket: Socket | null = null;
     private isConnected: boolean = false;
@@ -48,7 +43,6 @@ class SocketGlassesService {
 
             // Usar la URL proporcionada o detectar automáticamente
             const socketUrl = getSocketAIUrl();
-            console.log(socketUrl, 'SOY LA URL');
             console.log('[SocketGlasses] Conectando a Socket.IO:', socketUrl);
             
             // Configurar Socket.IO con opciones para React Native

@@ -1,13 +1,13 @@
 
+import colors from '@/assets/colors';
+import Button from '@/components/common/Button';
+import Text from '@/components/common/Text';
+import { useAuth } from '@/hooks/useAuth';
+import { getInitials, humanizeDate } from '@/utils/profile';
 import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
-import colors from '../../assets/colors';
-import Button from '../../components/common/Button';
-import Text from '../../components/common/Text';
-import { useAuth } from '../../hooks/useAuth';
-import { getInitials, humanizeDate } from '../../utils/profile';
 
 export default function ProfileScreen() {
     const { logout, user } = useAuth();

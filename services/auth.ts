@@ -8,21 +8,17 @@ const apiUrl = `${getEnvVar('APP_API_URL')}/api`;
 export default {
     async login(payload: any) {
         try {
-            console.log('payload', payload);
             await firebaseSdk.createAccount(payload);
-            console.log('entrando 1')
             await firebaseSdk.login(
                 payload,
                 () => console.log('login firebase'),
                 () => console.log('error login firebase'),
             );
             const urlFinal = `${getEnvVar('APP_API_URL_PORT')}/auth/signin`;
-            console.log('URL FINAL LOGIN:', urlFinal);
             const data = await axios.post(
                 urlFinal,
                 payload,
             );
-            console.log(data, 'DATA RETORNADA DEL OBJETO');
             return data.data;
         } catch (error) {
             //@ts-ignore

@@ -208,7 +208,7 @@ export default {
     },
 
     async getStreamUrl(port: number, code: string): Promise<string> {
-    return `${getEnvVar('APP_API_URL_GLASSES')}/video_feed/${port.toString()}/${code}`
+        return `${getEnvVar('APP_API_URL_GLASSES')}/video_feed/${port.toString()}/${code}`
     },
 };
 
