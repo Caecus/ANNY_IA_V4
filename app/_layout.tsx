@@ -12,7 +12,9 @@ import { CompassProvider } from '../context/CompassContext';
 import { GlassesProvider } from '../context/GlassesContext';
 import { NavigationProvider } from '../context/NavigationContext';
 import { useColorScheme } from '../hooks/useColorScheme';
+import RecognitionService from '../services/RecognitionService';
 import { RootState, store } from '../store/store';
+
 // Solicita permisos de Bluetooth solo en builds nativos (no en desarrollo ni Expo Go)
 async function requestBluetoothPermissionsIfNeeded() {
     // Solo Android nativo, no en Expo Go ni web
@@ -51,7 +53,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
             router.replace('/Login');
         } else if (
             isAuthenticated &&
-            !['index', 'Explore', 'ProfileScreen'].some(r => currentRoute.includes(r))
+            !['index', 'Explore', 'ProfileScreen', 'Devices'].some(r => currentRoute.includes(r))
         ) {
             console.log('Redirigiendo a index');
             router.replace('/');
@@ -70,6 +72,16 @@ export default function RootLayout() {
 
     useEffect(() => {
       requestBluetoothPermissionsIfNeeded();
+      RecognitionService.setServerUrl('http://vision-ai-service-env.eba-jfqhpms9.us-east-2.elasticbeanstalk.com');
+      
+      // Verificar conexión (opcional, pero útil para debug)
+      RecognitionService.checkHealth().then(healthy => {
+        if (healthy) {
+          console.log('[RECOGNITION] Servidor de visión disponible');
+        } else {
+          console.warn('[RECOGNITION] Servidor de visión NO disponible');
+        }
+      });
     }, []);
 
     if (!loaded) {
@@ -89,6 +101,7 @@ export default function RootLayout() {
                                         <Stack.Screen name="index" options={{ title: 'Inicio', headerShown: false }} />
                                         <Stack.Screen name="ProfileScreen" options={{ title: 'Perfil', headerShown: false }} />
                                         <Stack.Screen name="Explore" options={{ title: 'Mapa', headerShown: false }} />
+                                        <Stack.Screen name="Devices" options={{ title: 'Dispositivos', headerShown: false }} />
                                         <Stack.Screen name="+not-found" />
                                     </Stack>
                                 </AuthGate>

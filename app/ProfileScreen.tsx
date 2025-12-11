@@ -4,14 +4,15 @@ import Button from '@/components/common/Button';
 import Text from '@/components/common/Text';
 import { useAuth } from '@/hooks/useAuth';
 import { getInitials, humanizeDate } from '@/utils/profile';
-import { FontAwesome5, Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { MaterialIcons } from '@expo/vector-icons';
+import { useNavigation, useRouter } from 'expo-router';
 import React from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 
 export default function ProfileScreen() {
     const { logout, user } = useAuth();
     const router = useRouter();
+    const navigation = useNavigation();
     if (!user) return null;
 
     const initials = getInitials(user.name, user.lastName);
@@ -47,30 +48,21 @@ export default function ProfileScreen() {
 
             {/* Links a otras pantallas */}
             <View style={styles.linksContainer}>
-                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/conectividad')}>
+                <TouchableOpacity style={styles.link} onPress={() => navigation.navigate('Devices')}>
                     <MaterialIcons name="bluetooth" size={22} color={colors.primary} style={styles.linkIcon} />
                     <Text text="Conexión a dispositivos" type="p2" color={colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/comandos')}>
-                    <Ionicons name="mic" size={22} color={colors.primary} style={styles.linkIcon} />
-                    <Text text="Comandos (Micrófono)" type="p2" color={colors.primary} />
-                </TouchableOpacity>
-                <TouchableOpacity style={styles.link} onPress={() => router.push('/(stack)/legal')}>
-                    <FontAwesome5 name="file-contract" size={20} color={colors.primary} style={styles.linkIcon} />
-                    <Text text="Términos y condiciones" type="p2" color={colors.primary} />
                 </TouchableOpacity>
             </View>
 
             <View style={styles.buttonContainer}>
-                <View style={styles.buttonSubcontainer}>
+                <TouchableOpacity style={styles.buttonSubcontainer} onPress={logout}>
                     <Button 
                         text="Cerrar sesión" 
-                        onPress={logout} 
-                        style={styles.logoutBtn} 
+                        // style={styles.logoutBtn} 
                         type='outlined'
                     />
-                    <MaterialIcons name="logout" size={24} color={colors.primary} style={{ position: 'absolute', right: 16, top: '50%', transform: [{ translateY: -12 }] }} />
-                </View>
+                    <MaterialIcons name="logout" size={24} color={colors.primary}/>
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -163,6 +155,12 @@ const styles = StyleSheet.create({
     },
     buttonSubcontainer: {
         // alignSelf: 'center',
+        // backgroundColor: '#f00',
+        justifyContent: 'flex-start',
+        alignItems: 'center',
+        flexDirection: 'row',
+        width: '30%',
+        // columnGap: 4
     },
     buttonContainer: {
         width: '100%',
@@ -170,10 +168,5 @@ const styles = StyleSheet.create({
         alignItems: 'flex-start',
         justifyContent: 'flex-start',
         marginTop: 24,
-    },
-    logoutBtn: {
-        width: '100%',
-        minWidth: 180,
-        maxWidth: 320,
-    },
+    }
 });

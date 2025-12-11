@@ -48,42 +48,39 @@ export default function index() {
       processRecognition('billetes');
     } else if (lower.includes('navegación') || lower.includes('mapa') || lower.includes('ruta')) {
       speak('Abriendo mapa');
+      //@ts-ignore
       navigation.navigate('Explore');
     } else if (lower.includes('perfil')) {
       speak('Abriendo perfil');
+      //@ts-ignore
       navigation.navigate('ProfileScreen');
     } else {
       speak('Comando no reconocido, intenta de nuevo');
     }
   }
   // Mapeo frontend → backend
-  function mapRecognitionType(type: string): string {
+  function mapRecognitionType(type: string): 'ocr' | 'describe' | 'currency' {
     switch (type) {
       case 'texto':
       case 'text':
-        return 'text';
-      case 'objetos':
-      case 'objects':
-        return 'objects';
+      case 'imagen':
+        return 'ocr';
       case 'billetes':
       case 'dinero':
       case 'money':
-        return 'money';
-      case 'puntos':
-      case 'landmarks':
-        return 'landmarks';
-      case 'custom':
-        return 'custom';
+        return 'currency';
+      case 'objetos':
+      case 'objects':
       case 'descripcion':
       case 'description':
       case 'entorno':
       default:
-        return 'description';
+        return 'describe';
     }
   }
 
-  const { getGlassesActive } = useContext(GlassesContext);
-  const glassesConnected = getGlassesActive();
+  const glasses = useContext(GlassesContext);
+  const glassesConnected = glasses.getGlassesActive();
   const [cameraVisible, setCameraVisible] = useState(false);
   const [recognitionType, setRecognitionType] = useState<string | null>(null);
   const [facing, setFacing] = useState<CameraType>('back');
@@ -108,8 +105,12 @@ export default function index() {
     if (glassesConnected) {
       speak(`Procesando reconocimiento de ${type} con anteojos.`);
       console.log('[RECOGNITION] Usando anteojos para reconocimiento:', apiType);
-      // Solo necesitas llamar el método principal con el tipo correcto
-      await RecognitionService.analyzeFromGlasses(apiType);
+      const result = await RecognitionService.analyzeFromGlasses(apiType, glasses);
+      if (result && result.tts) {
+        speak(result.tts);
+      } else {
+        speak('No se pudo obtener resultado de los anteojos');
+      }
     } else {
       console.log('[RECOGNITION] Usando cámara móvil para reconocimiento:', apiType);
       setRecognitionType(type);
@@ -136,9 +137,34 @@ export default function index() {
         speak('Error: No se pudo obtener la imagen');
         return;
       }
-      await RecognitionService.sendImageForRecognition(photo.base64, apiType);
-      console.log('[RECOGNITION] Imagen enviada a RecognitionService:', apiType);
-      speak('Reconocimiento completado');
+      
+      const result = await RecognitionService.sendImageForRecognition(photo.base64, apiType, {
+        lang: 'es',
+        mode: 'general'
+      });
+      
+      if (result) {
+        console.log('[RECOGNITION] 🚀 Enviando imagen a RecognitionService:', apiType);
+        console.log('[RECOGNITION] ✅ Resultado recibido:', result);
+        
+        // Interpretar y reproducir el resultado según el tipo
+        if (apiType === 'ocr' && result.tts) {
+          // OCR: Reproducir texto detectado
+          speak(`Texto detectado: ${result.tts}`);
+        } else if (apiType === 'describe' && result.tts) {
+          // Descripción de escena: Reproducir descripción
+          speak(result.tts);
+        } else if (apiType === 'currency' && result.tts) {
+          // Billetes: Reproducir denominación
+          speak(result.tts);
+        } else {
+          speak('Reconocimiento completado');
+        }
+      } else {
+        console.log('[RECOGNITION] ❌ No se recibió resultado');
+        speak('No se pudo completar el reconocimiento. Por favor intenta nuevamente.');
+      }
+      
       setRecognitionType(null);
     } catch (err) {
       console.log('[RECOGNITION] Error al capturar o enviar imagen:', err);
@@ -217,14 +243,14 @@ export default function index() {
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.diceButton, styles.beautifulButton]}
-              accessibilityLabel="Reconocer imagen"
+              accessibilityLabel="Reconocer texto"
               accessibilityRole="button"
-              onPress={() => handleAccessiblePress('Reconocer imagen', () => processRecognition('imagen'))}
+              onPress={() => handleAccessiblePress('Reconocer texto', () => processRecognition('imagen'))}
             >
               <View style={styles.circleButton}>
-                <Ionicons name="image" size={64} color={colors.white} style={styles.beautifulIcon} />
+                <Ionicons name="text" size={64} color={colors.white} style={styles.beautifulIcon} />
               </View>
-              <Text type="h2" style={styles.gridText} text="Imagen" />
+              <Text type="h2" style={styles.gridText} text="Texto" />
             </TouchableOpacity>
           </View>
           <View style={styles.diceRow}>
@@ -267,6 +293,7 @@ export default function index() {
               style={[styles.diceButton, styles.beautifulButton]}
               accessibilityLabel="Solicitar ruta"
               accessibilityRole="button"
+              //@ts-ignore
               onPress={() => handleAccessiblePress('Solicitar ruta', () => navigation.navigate('Explore'))}
             >
               <View style={styles.circleButton}>
@@ -288,6 +315,7 @@ export default function index() {
               style={[styles.diceButton, styles.beautifulButton]}
               accessibilityLabel="Ir a perfil"
               accessibilityRole="button"
+              //@ts-ignore
               onPress={() => handleAccessiblePress('Ir a perfil', () => navigation.navigate('ProfileScreen'))}
             >
               <View style={styles.circleButton}>

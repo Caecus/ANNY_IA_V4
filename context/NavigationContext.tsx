@@ -173,6 +173,7 @@ export function NavigationProvider({ children }: { children: ReactNode }) {
     try {
       console.log('[NAVCTX] Solicitando permisos de ubicación...');
       const hasPermissions = await NavigationService.requestLocationPermissions();
+      console.log(hasPermissions, 'PERMISOS');
       if (!hasPermissions) {
         dispatch({ type: 'SET_ERROR', payload: 'Permisos de ubicación denegados' });
         return;

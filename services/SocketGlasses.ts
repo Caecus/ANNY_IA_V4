@@ -773,6 +773,19 @@ class SocketGlassesService {
     }
 
     // ============= MÉTODOS ESPECÍFICOS DE ANÁLISIS =============
+    /**
+     * Obtener la URL de la imagen actual de los anteojos (igual que la app vieja)
+     */
+    getCurrentImageUrl(): string | null {
+        if (!this.currentGlassesFrame) {
+            console.warn('[SocketGlasses] Parámetros de streaming no configurados');
+            return null;
+        }
+        const url = getEnvVar('APP_API_URL_GLASSES');
+        const port = this.currentGlassesFrame.port;
+        const code = this.currentGlassesFrame.code;
+        return `${url}/capture/${port}/${code}`;
+    }
 
     /**
      * Descripción general de la escena

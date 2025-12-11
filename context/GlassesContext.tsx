@@ -3,6 +3,7 @@ import axios from 'axios';
 import React, { createContext, useContext, useRef, useState } from 'react';
 import { NativeModules, ToastAndroid } from 'react-native';
 import RNBluetoothClassic from 'react-native-bluetooth-classic';
+import dgram from 'react-native-udp';
 import BTGlasses from '../services/BTGlasses';
 import SocketGlasses from '../services/SocketGlasses';
 import WIFIGlasses from '../services/WIFIGlasses';
@@ -11,6 +12,7 @@ import { GlassesProtocolEnum } from '../types/glasses-protocol.enum';
 // import Tts from 'react-native-tts';
 // import dgram from 'react-native-udp';
 // import UdpSocket from 'react-native-udp/lib/types/UdpSocket';
+import { speak } from '@/services/speaker';
 import { getEnvVar, getGlassesConfig } from '../utils/env';
 import { AccessibilityContext, VoiceCommand } from './AccessibilityContext';
 
@@ -58,6 +60,7 @@ export interface GlassesContextProps {
     glassesAnalyzeCurrentFrame: (type?: 'description' | 'text' | 'objects' | 'faces' | 'landmarks' | 'money' | 'custom') => Promise<void>;
     isStreamAnalysisActive: () => boolean;
     glassesTestConnectivity: () => Promise<void>;
+    glassesGetCurrentImageUrl: () => string | null;
 }
 
 export const GlassesContext = createContext({} as GlassesContextProps);
@@ -351,36 +354,38 @@ export const GlassesProvider = ({ children }: any) => {
             console.log("UDP socket already listening...")
             return
         }
-        // socket.current = dgram.createSocket({type:'udp4'})
-        // const port = 9009
-        // console.log(`UDP start listening on port ${port}`)
-        // socket.current.bind(port)
-        // socket.current.on('message', async function(msg, rinfo){
-        //     // console.log("message recv ->", msg.toString())
-        //     // console.log("rinfo recv ->", rinfo)
-        //     const currentURL = await WIFIGlasses.getApiUrl()
-        //     const newURL = `http://${rinfo.address}`
-        //     if (await isGlassesWifiProto() && (currentURL !== newURL || !glassesActive.current)){
-        //         console.log(`updating glasses IP, ${currentURL} -> ${newURL}`)
-        //         if (currentURL !== newURL){
-        //             // Tts.speak('Detectada nueva IP para lentes Wifi, conectando...')
-        //         }
-        //         if (glassesActive.current){
-        //             // glasses was active, we must disconnect
-        //             await glassesDisconnect()
-        //             glassesResestState()
-        //         }
-        //         await WIFIGlasses.configureAPiUrl(newURL) // set the new url
-        //         await _Setup() // reconfigure glasses
-        //     }
-        // })
+        socket.current = dgram.createSocket({type:'udp4'})
+        const port = 9009
+        console.log(`UDP start listening on port ${port}`);
+        speak("Conectando a lentes Wifi")
+        socket.current.bind(port);
+        //@ts-ignore
+        socket.current.on('message', async function(msg, rinfo){
+            // console.log("message recv ->", msg.toString())
+            // console.log("rinfo recv ->", rinfo)
+            const currentURL = await WIFIGlasses.getApiUrl()
+            const newURL = `http://${rinfo.address}`
+            if (await isGlassesWifiProto() && (currentURL !== newURL || !glassesActive.current)){
+                console.log(`updating glasses IP, ${currentURL} -> ${newURL}`)
+                if (currentURL !== newURL){
+                    // Tts.speak('Detectada nueva IP para lentes Wifi, conectando...')
+                }
+                if (glassesActive.current){
+                    // glasses was active, we must disconnect
+                    await glassesDisconnect()
+                    glassesResestState()
+                }
+                await WIFIGlasses.configureAPiUrl(newURL) // set the new url
+                await _Setup() // reconfigure glasses
+            }
+        })
     }
 
     const glassesInit = async () => {
         if (glassesActive.current) return;
         if ((await isGlassesBTProto())) {
             console.log("[glassesInit] connecting to BT glasses")
-            // Tts.speak("Conectando a lentes Bluetooth")
+            speak("Conectando a lentes Bluetooth")
             // init for BT protocol requires to find the correct
             // bluetooth devices based on name and mac address
             // and connect to it
@@ -410,13 +415,13 @@ export const GlassesProvider = ({ children }: any) => {
             case '<wifi connected':
                 setGlassesLoadingWiFi(false);
                 setGlassesWiFiConnected(true);
-                // Tts.speak('Conexión de lentes a red exitosa');
+                speak('Conexión de lentes a red exitosa');
                 ToastAndroid.show('Conexión de lentes a red exitosa', ToastAndroid.SHORT);
                 break;
             case '<wifi connection timeout':
                 setGlassesLoadingWiFi(false);
                 setGlassesWiFiConnected(false);
-                // Tts.speak('Conexión de lentes a red fallida');
+                speak('Conexión de lentes a red fallida');
                 ToastAndroid.show('Conexión de lentes a red fallida', ToastAndroid.SHORT);
                 break;
         }
@@ -796,6 +801,15 @@ export const GlassesProvider = ({ children }: any) => {
         return await SocketGlasses.testConnectivity();
     };
 
+    // Obtener la URL de la imagen actual de los anteojos (lógica vieja)
+    const glassesGetCurrentImageUrl = (): string | null => {
+        SocketGlasses.setGlassesStreamParams(
+            glassesDetectionPortRef.current,
+            glassesDetectionCodeRef.current
+        );
+        return SocketGlasses.getCurrentImageUrl();
+    };
+
     return (
         <GlassesContext.Provider
             value={{
@@ -840,6 +854,7 @@ export const GlassesProvider = ({ children }: any) => {
                 glassesAnalyzeCurrentFrame,
                 isStreamAnalysisActive,
                 glassesTestConnectivity,
+                glassesGetCurrentImageUrl
             }}>
             {children}
         </GlassesContext.Provider>

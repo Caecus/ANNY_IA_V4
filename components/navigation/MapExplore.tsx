@@ -84,6 +84,8 @@ export default function MapExplore({}: MapExploreProps) {
 
   const { getCurrentLocation } = useNavigation();
   useEffect(() => {
+    // NO solicitar ubicación automáticamente al montar
+    // El usuario puede solicitarla manualmente con el botón
     getCurrentLocation();
   }, []);
 
